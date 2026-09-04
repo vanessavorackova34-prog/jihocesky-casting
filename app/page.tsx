@@ -1,70 +1,99 @@
-"use client";
-
-import { useState } from "react";
+import Link from "next/link";
 
 export default function Home() {
-  const [photos, setPhotos] = useState<File[]>([]);
-
   return (
-    <main style={{ maxWidth: 600, margin: "50px auto", padding: 20 }}>
-      <h1>Jihočeský casting</h1>
+    <>
+      <header className="top">
+        <div className="logo">
+          🎬 <span>JIHOČESKÝ CASTING</span>
+        </div>
 
-      <p>Registrace na casting</p>
+        <nav className="nav">
+          <a href="#casting">O castingu</a>
+          <a href="#jak">Jak to funguje</a>
+          <a href="#kontakt">Kontakt</a>
+        </nav>
 
-      <form>
-        <input
-          type="text"
-          placeholder="Jméno a příjmení"
-          required
-          style={{
-            width: "100%",
-            padding: 12,
-            marginBottom: 15,
-          }}
-        />
+        <Link className="btn" href="/prihlaseni">
+          Přihlášení pořadatele
+        </Link>
+      </header>
 
-        <input
-          type="email"
-          placeholder="E-mail"
-          required
-          style={{
-            width: "100%",
-            padding: 12,
-            marginBottom: 15,
-          }}
-        />
+      <main>
+        <section className="hero" id="casting">
+          <div>
+            <div className="eyebrow">
+              CASTING • FILM • TV • REKLAMA
+            </div>
 
-        <label>
-          <strong>Nahraj fotografie</strong>
-        </label>
+            <h1>
+              JIHOČESKÝ
+              <br />
+              <span className="gold">CASTING</span>
+            </h1>
 
-        <p>Vyber 1 až 5 fotografií.</p>
+            <p className="muted">
+              Castingová databáze herců, komparzu, talentů a filmového
+              štábu z jižních Čech a okolí.
+            </p>
 
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={(e) => {
-            const files = Array.from(e.target.files || []).slice(0, 5);
-            setPhotos(files);
-          }}
-        />
+            <Link className="btn primary" href="/registrace">
+              Chci se registrovat do castingu
+            </Link>
+          </div>
 
-        {photos.length > 0 && (
-          <p>Vybráno fotografií: {photos.length}</p>
-        )}
+          <div className="card">
+            <h2>Hledáme nové tváře</h2>
 
-        <button
-          type="submit"
-          style={{
-            marginTop: 20,
-            padding: "12px 25px",
-            cursor: "pointer",
-          }}
-        >
-          Odeslat registraci
-        </button>
-      </form>
-    </main>
+            <p className="muted">
+              Zaregistruj se do databáze a můžeš být osloven/a pro film,
+              seriál, reklamu, klip nebo focení.
+            </p>
+
+            <Link className="btn primary" href="/registrace">
+              Registrovat profil
+            </Link>
+          </div>
+        </section>
+
+        <section className="stats">
+          <div className="stat">
+            <b>🎭</b>
+            <small>Herci a herečky</small>
+          </div>
+
+          <div className="stat">
+            <b>🎬</b>
+            <small>Komparz a statisté</small>
+          </div>
+
+          <div className="stat">
+            <b>📸</b>
+            <small>Modelové a talenty</small>
+          </div>
+
+          <div className="stat">
+            <b>📍</b>
+            <small>Jihočeský kraj</small>
+          </div>
+        </section>
+
+        <section className="section" id="jak">
+          <div className="card">
+            <h2>Jak to funguje?</h2>
+
+            <p className="muted">
+              1. Vyplníš registrační formulář. 2. Nahraješ fotografie.
+              3. Profil čeká na schválení. 4. Pořadatelé ho mohou zařadit
+              do vhodného projektu.
+            </p>
+          </div>
+        </section>
+      </main>
+
+      <footer id="kontakt">
+        © 2026 Jihočeský Casting
+      </footer>
+    </>
   );
 }
