@@ -1,13 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-);
+import { createBrowserClient } from "@supabase/ssr";
 
 export default function ProdukcePrihlaseniPage() {
   const router = useRouter();
@@ -24,27 +19,35 @@ export default function ProdukcePrihlaseniPage() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+      const key =
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      if (!url || !key) {
+        setError("Web není připojený k databázi.");
+        return;
+      }
+
+      const supabase = createBrowserClient(url, key);
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
         password,
       });
 
       if (error) {
-        setError(error.message);
-        setLoading(false);
+        setError("Nesprávný e-mail nebo heslo.");
         return;
       }
 
-      if (!data.user) {
-        setError("Přihlášení se nepodařilo.");
-        setLoading(false);
-        return;
-      }
-
-      router.push("/produkce");
+      router.push("/produkce/dashboard");
+      router.refresh();
     } catch (err) {
       console.error(err);
-      setError("Nepodařilo se připojit k přihlášení.");
+      setError("Přihlášení se nepodařilo.");
+    } finally {
       setLoading(false);
     }
   }
@@ -69,7 +72,19 @@ export default function ProdukcePrihlaseniPage() {
 
         <h1>Přihlášení</h1>
 
-        <form onSubmit={login} style={{ display: "grid", gap: "16px" }}>
+        {error && (
+          <p style={{ color: "red" }}>
+            {error}
+          </p>
+        )}
+
+        <form
+          onSubmit={login}
+          style={{
+            display: "grid",
+            gap: "16px",
+          }}
+        >
           <label>
             E-mail
             <input
@@ -102,12 +117,13 @@ export default function ProdukcePrihlaseniPage() {
             />
           </label>
 
-          {error && <p style={{ color: "red" }}>{error}</p>}
-
           <button
             type="submit"
             disabled={loading}
-            style={{ padding: "14px", cursor: "pointer" }}
+            style={{
+              padding: "14px",
+              cursor: loading ? "default" : "pointer",
+            }}
           >
             {loading ? "Přihlašuji..." : "Přihlásit se"}
           </button>
