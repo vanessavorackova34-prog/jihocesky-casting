@@ -32,10 +32,12 @@ export default function Home() {
               <span className="gold">CASTING</span>
             </h1>
 
-            <p className="muted">
-              Castingová databáze herců, komparzu, talentů a filmového
-              štábu z jižních Čech a okolí.
-            </<div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+  <p className="muted">
+  Castingová databáze herců, komparzu, talentů a filmového
+  štábu z jižních Čech a okolí.
+</p>
+
+<div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
   <Link className="btn" href="/prihlaseni">
     Přihlášení pořadatele
   </Link>
