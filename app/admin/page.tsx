@@ -27,6 +27,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<"pending" | "approved" | "rejected">("pending");
+  const [selectedCandidate, setSelectedCandidate] =
+  useState<Candidate | null>(null);
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const key =
@@ -107,7 +109,49 @@ export default function AdminPage() {
   }
 async function deleteCandidate(id: string, name: string) {
   const confirmed = window.confirm(
-    `Opravdu chcete smazat registraci ${name}?`
+    `Opravdu chceš smazat registraci ${name}? Registrace i všechny fotografie budou trvale odstraněny.`
+  );
+
+  if (!confirmed) return;
+
+  const { data: files, error: listError } = await supabase.storage
+    .from("fotky-hercu")
+    .list(id);
+
+  if (listError) {
+    alert("Nepodařilo se načíst fotografie: " + listError.message);
+    return;
+  }
+
+  if (files && files.length > 0) {
+    const paths = files.map((file) => `${id}/${file.name}`);
+
+    const { error: photoError } = await supabase.storage
+      .from("fotky-hercu")
+      .remove(paths);
+
+    if (photoError) {
+      alert("Fotografie se nepodařilo smazat: " + photoError.message);
+      return;
+    }
+  }
+
+  const { error: deleteError } = await supabase
+    .from("candidates")
+    .delete()
+    .eq("id", id);
+
+  if (deleteError) {
+    alert("Registraci se nepodařilo smazat: " + deleteError.message);
+    return;
+  }
+
+  setCandidates((current) =>
+    current.filter((candidate) => candidate.id !== id)
+  );
+
+  alert(`Registrace ${name} byla smazána včetně fotografií.`);
+}
   );
 
   if (!confirmed) return;
@@ -313,6 +357,13 @@ async function deleteCandidate(id: string, name: string) {
   }
 >
   🗑️ Smazat
+  </button>
+
+<button
+  className="btn"
+  onClick={() => setSelectedCandidate(candidate)}
+>
+  👤 Zobrazit detail
 </button>
 </div>
 </div>
@@ -323,6 +374,55 @@ async function deleteCandidate(id: string, name: string) {
             <p>Zatím zde nejsou žádné registrace.</p>
           </div>
         )}
+        {selectedCandidate && (
+  <div className="card">
+    <h2>
+      👤 {selectedCandidate.first_name} {selectedCandidate.last_name}
+    </h2>
+
+    <p><strong>Věk:</strong> {selectedCandidate.age}</p>
+    <p><strong>Město:</strong> {selectedCandidate.city || "Neuvedeno"}</p>
+    <p><strong>Telefon:</strong> {selectedCandidate.phone || "Neuvedeno"}</p>
+    <p><strong>E-mail:</strong> {selectedCandidate.email || "Neuvedeno"}</p>
+    <p><strong>Role:</strong> {selectedCandidate.role}</p>
+    <p><strong>Výška:</strong> {selectedCandidate.height_cm ? `${selectedCandidate.height_cm} cm` : "Neuvedeno"}</p>
+    <p><strong>Zkušenosti:</strong> {selectedCandidate.experience || "Neuvedeno"}</p>
+    <p><strong>Dostupnost:</strong> {selectedCandidate.availability || "Neuvedeno"}</p>
+    <p><strong>Stav:</strong> {statusText(selectedCandidate.status)}</p>
+
+    <h3>Fotografie</h3>
+
+    {selectedCandidate.photos &&
+    selectedCandidate.photos.length > 0 ? (
+      <div>
+        {selectedCandidate.photos.map((photo, index) => (
+          <img
+            key={photo}
+            src={photo}
+            alt={`Fotografie ${index + 1}`}
+            style={{
+              width: "180px",
+              maxWidth: "100%",
+              margin: "5px",
+              borderRadius: "10px",
+            }}
+          />
+        ))}
+      </div>
+    ) : (
+      <p>Žádné fotografie.</p>
+    )}
+
+    <br />
+
+    <button
+      className="btn"
+      onClick={() => setSelectedCandidate(null)}
+    >
+      ← Zavřít detail
+    </button>
+  </div>
+)}
       </main>
     </>
   );
