@@ -1,4 +1,4 @@
-"use client";
+Logout"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -105,7 +105,29 @@ export default function AdminPage() {
       )
     );
   }
+async function deleteCandidate(id: string, name: string) {
+  const confirmed = window.confirm(
+    `Opravdu chcete smazat registraci ${name}?`
+  );
 
+  if (!confirmed) return;
+
+  const { error } = await supabase
+    .from("candidates")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    alert("Registraci se nepodařilo smazat: " + error.message);
+    return;
+  }
+
+  setCandidates((current) =>
+    current.filter((candidate) => candidate.id !== id)
+  );
+
+  alert("Registrace byla smazána.");
+}
   async function logout() {
     await supabase.auth.signOut();
     router.push("/prihlaseni");
@@ -281,7 +303,17 @@ export default function AdminPage() {
                   }
                 >
                   Vrátit do čekajících
-                </button>
+                  <button
+  className="btn"
+  onClick={() =>
+    deleteCandidate(
+      candidate.id,
+      `${candidate.first_name} ${candidate.last_name}`
+    )
+  }
+>
+  🗑️ Smazat
+</button> 
               </div>
             </div>
           ))}
