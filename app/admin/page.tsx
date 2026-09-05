@@ -71,7 +71,7 @@ export default function AdminPage() {
       .eq("id", id);
 
     if (error) {
-      alert("Stav se nepodařilo změnit.");
+      alert("Chyba Supabase: " + error.message);
       return;
     }
 
