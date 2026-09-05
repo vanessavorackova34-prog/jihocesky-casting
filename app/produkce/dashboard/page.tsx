@@ -22,8 +22,8 @@ type Candidate = {
 };
 
 const supabase = createBrowserClient(
-  'https://TVUJ-PROJEKT.supabase.co',
-  'TVUJ-ANON-KLIC'
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 export default function ProductionDashboard() {
@@ -56,7 +56,6 @@ export default function ProductionDashboard() {
 
   async function loadCandidates() {
     setLoading(true);
-    setError('');
 
     const {
       data: { user },
@@ -90,12 +89,7 @@ export default function ProductionDashboard() {
       .from('fotky-hercu')
       .list(candidate.id);
 
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    if (!data) return;
+    if (error || !data) return;
 
     const photoUrls = data
       .filter((file) => {
@@ -139,66 +133,41 @@ export default function ProductionDashboard() {
   }
 
   const cities = Array.from(
-    new Set(
-      candidates
-        .map((candidate) => candidate.city)
-        .filter(Boolean)
-    )
+    new Set(candidates.map((c) => c.city).filter(Boolean))
   ).sort();
 
   const roles = Array.from(
-    new Set(
-      candidates
-        .map((candidate) => candidate.role)
-        .filter(Boolean)
-    )
+    new Set(candidates.map((c) => c.role).filter(Boolean))
   ).sort();
 
   const genders = Array.from(
-    new Set(
-      candidates
-        .map((candidate) => candidate.gender)
-        .filter(Boolean)
-    )
+    new Set(candidates.map((c) => c.gender).filter(Boolean))
   ).sort();
 
   const experiences = Array.from(
-    new Set(
-      candidates
-        .map((candidate) => candidate.experience)
-        .filter(Boolean)
-    )
+    new Set(candidates.map((c) => c.experience).filter(Boolean))
   ).sort();
 
   const availabilities = Array.from(
-    new Set(
-      candidates
-        .map((candidate) => candidate.availability)
-        .filter(Boolean)
-    )
+    new Set(candidates.map((c) => c.availability).filter(Boolean))
   ).sort();
 
   const statuses = Array.from(
-    new Set(
-      candidates
-        .map((candidate) => candidate.status)
-        .filter(Boolean)
-    )
+    new Set(candidates.map((c) => c.status).filter(Boolean))
   ).sort();
 
   const filteredCandidates = candidates.filter((candidate) => {
-    const searchText = search.toLowerCase().trim();
+    const text = search.toLowerCase().trim();
 
-    const fullName = `${candidate.first_name || ''} ${
-      candidate.last_name || ''
-    }`.toLowerCase();
+    const name =
+      `${candidate.first_name || ''} ${candidate.last_name || ''}`.toLowerCase();
 
     const matchesSearch =
-      !searchText ||
-      fullName.includes(searchText) ||
-      (candidate.email || '').toLowerCase().includes(searchText) ||
-      (candidate.city || '').toLowerCase().includes(searchText) ||
-      (candidate.role || '').toLowerCase().includes(searchText);
+      !text ||
+      name.includes(text) ||
+      (candidate.email || '').toLowerCase().includes(text) ||
+      (candidate.city || '').toLowerCase().includes(text) ||
+      (candidate.role || '').toLowerCase().includes(text);
 
     const age = Number(candidate.age);
 
@@ -256,7 +225,8 @@ export default function ProductionDashboard() {
     <main
       style={{
         minHeight: '100vh',
-        background: '#f5f5f5',
+        background: '#000',
+        color: '#fff',
         padding: '30px',
       }}
     >
@@ -266,45 +236,50 @@ export default function ProductionDashboard() {
           margin: '0 auto',
         }}
       >
-        <div
+        <header
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '25px',
-            gap: '15px',
+            marginBottom: '30px',
             flexWrap: 'wrap',
+            gap: '15px',
           }}
         >
           <div>
-            <h1 style={{ margin: 0 }}>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: '32px',
+              }}
+            >
               Produkce
             </h1>
 
-            <p style={{ marginTop: '6px', color: '#666' }}>
+            <p
+              style={{
+                color: '#aaa',
+                marginTop: '6px',
+              }}
+            >
               Přehled přihlášených uchazečů
             </p>
           </div>
 
           <button
             onClick={logout}
-            style={{
-              padding: '10px 18px',
-              borderRadius: '8px',
-              border: '1px solid #ccc',
-              background: 'white',
-              cursor: 'pointer',
-            }}
+            style={buttonStyle}
           >
             Odhlásit
           </button>
-        </div>
+        </header>
 
         {error && (
           <div
             style={{
-              background: '#ffe5e5',
-              color: '#b00000',
+              background: '#250000',
+              border: '1px solid #700',
+              color: '#fff',
               padding: '15px',
               borderRadius: '10px',
               marginBottom: '20px',
@@ -316,14 +291,19 @@ export default function ProductionDashboard() {
 
         <section
           style={{
-            background: 'white',
+            background: '#111',
+            border: '1px solid #292929',
             padding: '20px',
             borderRadius: '15px',
             marginBottom: '25px',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
           }}
         >
-          <h2 style={{ marginTop: 0 }}>
+          <h2
+            style={{
+              marginTop: 0,
+              marginBottom: '18px',
+            }}
+          >
             Filtrování
           </h2>
 
@@ -336,7 +316,6 @@ export default function ProductionDashboard() {
             }}
           >
             <input
-              type="text"
               placeholder="Hledat..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -365,7 +344,6 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Pohlaví</option>
-
               {genders.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -379,7 +357,6 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Město</option>
-
               {cities.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -393,7 +370,6 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Role</option>
-
               {roles.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -423,7 +399,6 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Zkušenosti</option>
-
               {experiences.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -437,7 +412,6 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Dostupnost</option>
-
               {availabilities.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -451,7 +425,6 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Status</option>
-
               {statuses.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -464,34 +437,38 @@ export default function ProductionDashboard() {
               style={{
                 padding: '12px',
                 borderRadius: '8px',
-                border: 'none',
-                background: '#222',
-                color: 'white',
+                border: '1px solid #444',
+                background: '#fff',
+                color: '#000',
                 cursor: 'pointer',
+                fontWeight: '600',
               }}
             >
               Vymazat filtry
             </button>
           </div>
 
-          <div
+          <p
             style={{
-              marginTop: '15px',
-              color: '#666',
+              color: '#aaa',
+              marginBottom: 0,
+              marginTop: '18px',
             }}
           >
-            Zobrazeno: <strong>{filteredCandidates.length}</strong>{' '}
+            Zobrazeno:{' '}
+            <strong style={{ color: '#fff' }}>
+              {filteredCandidates.length}
+            </strong>{' '}
             z {candidates.length}
-          </div>
+          </p>
         </section>
 
         {loading ? (
           <div
             style={{
-              background: 'white',
-              padding: '30px',
-              borderRadius: '15px',
               textAlign: 'center',
+              padding: '50px',
+              color: '#aaa',
             }}
           >
             Načítám uchazeče...
@@ -499,10 +476,9 @@ export default function ProductionDashboard() {
         ) : filteredCandidates.length === 0 ? (
           <div
             style={{
-              background: 'white',
-              padding: '30px',
-              borderRadius: '15px',
               textAlign: 'center',
+              padding: '50px',
+              color: '#aaa',
             }}
           >
             Žádní uchazeči neodpovídají filtrům.
@@ -533,7 +509,7 @@ export default function ProductionDashboard() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,0.65)',
+            background: 'rgba(0,0,0,0.85)',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -544,7 +520,9 @@ export default function ProductionDashboard() {
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: 'white',
+              background: '#111',
+              color: '#fff',
+              border: '1px solid #333',
               borderRadius: '15px',
               maxWidth: '900px',
               width: '100%',
@@ -558,10 +536,9 @@ export default function ProductionDashboard() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                gap: '15px',
               }}
             >
-              <h2 style={{ marginTop: 0 }}>
+              <h2>
                 {selectedCandidate.first_name}{' '}
                 {selectedCandidate.last_name}
               </h2>
@@ -569,8 +546,9 @@ export default function ProductionDashboard() {
               <button
                 onClick={() => setSelectedCandidate(null)}
                 style={{
-                  border: 'none',
-                  background: '#eee',
+                  border: '1px solid #444',
+                  background: '#222',
+                  color: '#fff',
                   borderRadius: '50%',
                   width: '38px',
                   height: '38px',
@@ -613,7 +591,7 @@ export default function ProductionDashboard() {
                 display: 'grid',
                 gridTemplateColumns:
                   'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: '15px',
+                gap: '12px',
               }}
             >
               <Info
@@ -729,11 +707,11 @@ function CandidateCard({
     <div
       onClick={onClick}
       style={{
-        background: 'white',
+        background: '#111',
+        border: '1px solid #292929',
         borderRadius: '15px',
         overflow: 'hidden',
         cursor: 'pointer',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
       }}
     >
       {photo ? (
@@ -752,7 +730,7 @@ function CandidateCard({
         <div
           style={{
             height: '300px',
-            background: '#eee',
+            background: '#181818',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -768,21 +746,21 @@ function CandidateCard({
           {candidate.first_name} {candidate.last_name}
         </h3>
 
-        <p style={{ margin: '4px 0', color: '#666' }}>
+        <p style={cardText}>
           Věk: {candidate.age || '-'}
         </p>
 
-        <p style={{ margin: '4px 0', color: '#666' }}>
+        <p style={cardText}>
           Město: {candidate.city || '-'}
         </p>
 
-        <p style={{ margin: '4px 0', color: '#666' }}>
+        <p style={cardText}>
           Role: {candidate.role || '-'}
         </p>
 
         <p
           style={{
-            marginTop: '12px',
+            marginTop: '14px',
             fontWeight: 'bold',
           }}
         >
@@ -803,7 +781,8 @@ function Info({
   return (
     <div
       style={{
-        background: '#f7f7f7',
+        background: '#181818',
+        border: '1px solid #292929',
         padding: '12px',
         borderRadius: '8px',
       }}
@@ -811,7 +790,7 @@ function Info({
       <div
         style={{
           fontSize: '12px',
-          color: '#777',
+          color: '#888',
           marginBottom: '4px',
         }}
       >
@@ -835,7 +814,23 @@ const inputStyle = {
   boxSizing: 'border-box' as const,
   padding: '12px',
   borderRadius: '8px',
-  border: '1px solid #ccc',
-  background: 'white',
+  border: '1px solid #444',
+  background: '#181818',
+  color: '#fff',
   fontSize: '14px',
+};
+
+const buttonStyle = {
+  padding: '10px 18px',
+  borderRadius: '8px',
+  border: '1px solid #444',
+  background: '#fff',
+  color: '#000',
+  cursor: 'pointer',
+  fontWeight: '600',
+};
+
+const cardText = {
+  margin: '4px 0',
+  color: '#aaa',
 };
