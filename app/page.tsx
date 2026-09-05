@@ -35,12 +35,15 @@ export default function Home() {
             <p className="muted">
               Castingová databáze herců, komparzu, talentů a filmového
               štábu z jižních Čech a okolí.
-            </p>
+            </<div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+  <Link className="btn" href="/prihlaseni">
+    Přihlášení pořadatele
+  </Link>
 
-            <Link className="btn primary" href="/registrace">
-              Chci se registrovat do castingu
-            </Link>
-          </div>
+  <Link className="btn" href="/prihlaseni">
+    Pro produkce
+  </Link>
+</div>
 
           <div className="card">
             <h2>Hledáme nové tváře</h2>
