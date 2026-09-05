@@ -22,8 +22,8 @@ type Candidate = {
 };
 
 const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  'https://TVUJ-PROJEKT.supabase.co',
+  'TVUJ-ANON-KLIC'
 );
 
 export default function ProductionDashboard() {
