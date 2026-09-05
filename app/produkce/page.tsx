@@ -53,7 +53,7 @@ export default function ProdukcePage() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      router.push("/prihlaseni");
+      router.push("/produkce/prihlaseni");
       return;
     }
 
@@ -116,7 +116,7 @@ export default function ProdukcePage() {
 
   async function logout() {
     await supabase.auth.signOut();
-    router.push("/prihlaseni");
+    router.push("/produkce/prihlaseni");
   }
 
   const filteredCandidates = candidates.filter((candidate) => {
