@@ -25,6 +25,7 @@ export default function AdminPage() {
 
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(""); yeah
   const [filter, setFilter] = useState<"pending" | "approved" | "rejected">("pending");
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
