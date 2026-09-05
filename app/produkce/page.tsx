@@ -17,37 +17,37 @@ export default function ProdukcePrihlaseniPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function login(e: React.FormEvent) {
-  e.preventDefault();
+  async function login(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
 
-  setError("");
-  setLoading(true);
+    setError("");
+    setLoading(true);
 
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
-    if (error) {
-      setError(error.message);
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+
+      if (!data.user) {
+        setError("Přihlášení se nepodařilo.");
+        setLoading(false);
+        return;
+      }
+
+      router.push("/produkce");
+    } catch (err) {
+      console.error(err);
+      setError("Nepodařilo se připojit k přihlášení.");
       setLoading(false);
-      return;
     }
-
-    if (!data.user) {
-      setError("Přihlášení se nepodařilo.");
-      setLoading(false);
-      return;
-    }
-
-    router.push("/produkce");
-  } catch (err) {
-    console.error(err);
-    setError("Nepodařilo se připojit k přihlášení.");
-    setLoading(false);
   }
-}
 
   return (
     <main
@@ -69,13 +69,7 @@ export default function ProdukcePrihlaseniPage() {
 
         <h1>Přihlášení</h1>
 
-        <form
-          onSubmit={login}
-          style={{
-            display: "grid",
-            gap: "16px",
-          }}
-        >
+        <form onSubmit={login} style={{ display: "grid", gap: "16px" }}>
           <label>
             E-mail
             <input
@@ -108,19 +102,12 @@ export default function ProdukcePrihlaseniPage() {
             />
           </label>
 
-          {error && (
-            <p style={{ color: "red" }}>
-              {error}
-            </p>
-          )}
+          {error && <p style={{ color: "red" }}>{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            style={{
-              padding: "14px",
-              cursor: "pointer",
-            }}
+            style={{ padding: "14px", cursor: "pointer" }}
           >
             {loading ? "Přihlašuji..." : "Přihlásit se"}
           </button>
