@@ -297,13 +297,13 @@ async function deleteCandidate(id: string, name: string) {
                 </button>
 
                 <button
-                  className="btn"
-                  onClick={() =>
-                    changeStatus(candidate.id, "pending")
-                  }
-                >
-                  Vrátit do čekajících
-                  <button
+  className="btn"
+  onClick={() => changeStatus(candidate.id, "pending")}
+>
+  Vrátit do čekajících
+</button>
+
+<button
   className="btn"
   onClick={() =>
     deleteCandidate(
@@ -313,10 +313,10 @@ async function deleteCandidate(id: string, name: string) {
   }
 >
   🗑️ Smazat
-</button> 
-              </div>
-            </div>
-          ))}
+</button>
+</div>
+</div>
+))}
 
         {!loading && candidates.length === 0 && !error && (
           <div className="card">
