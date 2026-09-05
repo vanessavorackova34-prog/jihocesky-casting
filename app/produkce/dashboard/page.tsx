@@ -12,11 +12,13 @@ type Candidate = {
   phone: string | null;
   email: string | null;
   role: string | null;
+  height_cm: number | null;
   height_centimetres: number | null;
   experience: string | null;
   availability: string | null;
   status: string | null;
   gender: string | null;
+  photos?: string[];
 };
 
 export default function ProdukceDashboardPage() {
@@ -34,7 +36,6 @@ export default function ProdukceDashboardPage() {
   useEffect(() => {
     async function loadCandidates() {
       const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-
       const key =
         process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -59,7 +60,54 @@ export default function ProdukceDashboardPage() {
         return;
       }
 
-      setCandidates(data || []);
+      const withPhotos = await Promise.all(
+        (data || []).map(async (candidate) => {
+          const { data: files, error: photoListError } =
+            await supabase.storage
+              .from("fotky_hercu")
+              .list(candidate.id);
+
+          if (photoListError) {
+            console.error(
+              "Chyba při načítání fotek:",
+              photoListError
+            );
+            return {
+              ...candidate,
+              photos: [],
+            };
+          }
+
+          const photos =
+            files
+              ?.filter((file) => {
+                const name = file.name.toLowerCase();
+
+                return (
+                  name.endsWith(".jpg") ||
+                  name.endsWith(".jpeg") ||
+                  name.endsWith(".png") ||
+                  name.endsWith(".webp")
+                );
+              })
+              .map((file) => {
+                const { data } = supabase.storage
+                  .from("fotky_hercu")
+                  .getPublicUrl(
+                    `${candidate.id}/${file.name}`
+                  );
+
+                return data.publicUrl;
+              }) || [];
+
+          return {
+            ...candidate,
+            photos,
+          };
+        })
+      );
+
+      setCandidates(withPhotos);
       setLoading(false);
     }
 
@@ -97,8 +145,12 @@ export default function ProdukceDashboardPage() {
       const matchesSearch =
         !searchText ||
         fullName.includes(searchText) ||
-        (candidate.email || "").toLowerCase().includes(searchText) ||
-        (candidate.city || "").toLowerCase().includes(searchText);
+        (candidate.email || "")
+          .toLowerCase()
+          .includes(searchText) ||
+        (candidate.city || "")
+          .toLowerCase()
+          .includes(searchText);
 
       const role = (candidate.role || "").toLowerCase();
       const gender = (candidate.gender || "").toLowerCase();
@@ -210,26 +262,14 @@ export default function ProdukceDashboardPage() {
         boxSizing: "border-box",
       }}
     >
-      <div
-        style={{
-          maxWidth: "1300px",
-          margin: "0 auto",
-        }}
-      >
-        <h1
-          style={{
-            fontSize: "36px",
-            marginBottom: "8px",
-            color: "#111827",
-          }}
-        >
-          Produkční panel
-        </h1>
+      <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
+        <h1>Produkční panel</h1>
 
-        <p style={{ color: "#374151", marginBottom: "30px" }}>
+        <p style={{ color: "#374151" }}>
           Celkem kandidátů: <strong>{candidates.length}</strong>
           {" · "}
-          Zobrazeno: <strong>{filteredCandidates.length}</strong>
+          Zobrazeno:{" "}
+          <strong>{filteredCandidates.length}</strong>
         </p>
 
         {error && (
@@ -239,7 +279,6 @@ export default function ProdukceDashboardPage() {
               color: "#991b1b",
               padding: "15px",
               borderRadius: "10px",
-              marginBottom: "20px",
             }}
           >
             {error}
@@ -248,21 +287,14 @@ export default function ProdukceDashboardPage() {
 
         <section
           style={{
-            background: "#ffffff",
+            background: "#fff",
             border: "1px solid #d1d5db",
             borderRadius: "16px",
             padding: "24px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            marginTop: "25px",
           }}
         >
-          <h2
-            style={{
-              marginTop: 0,
-              color: "#111827",
-            }}
-          >
-            Filtry
-          </h2>
+          <h2>🔎 Filtry</h2>
 
           <input
             type="text"
@@ -273,12 +305,11 @@ export default function ProdukceDashboardPage() {
               width: "100%",
               padding: "14px",
               boxSizing: "border-box",
-              borderRadius: "10px",
               border: "1px solid #9ca3af",
-              color: "#111827",
-              background: "#ffffff",
+              borderRadius: "10px",
               marginBottom: "15px",
-              fontSize: "15px",
+              color: "#111827",
+              background: "#fff",
             }}
           />
 
@@ -303,7 +334,9 @@ export default function ProdukceDashboardPage() {
 
             <select
               value={genderFilter}
-              onChange={(e) => setGenderFilter(e.target.value)}
+              onChange={(e) =>
+                setGenderFilter(e.target.value)
+              }
               style={selectStyle}
             >
               <option>Všichni</option>
@@ -326,7 +359,9 @@ export default function ProdukceDashboardPage() {
 
             <select
               value={cityFilter}
-              onChange={(e) => setCityFilter(e.target.value)}
+              onChange={(e) =>
+                setCityFilter(e.target.value)
+              }
               style={selectStyle}
             >
               <option>Všechna města</option>
@@ -339,7 +374,9 @@ export default function ProdukceDashboardPage() {
 
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) =>
+                setStatusFilter(e.target.value)
+              }
               style={selectStyle}
             >
               <option>Všechny statusy</option>
@@ -354,7 +391,6 @@ export default function ProdukceDashboardPage() {
               onClick={resetFilters}
               style={{
                 padding: "13px",
-                cursor: "pointer",
                 borderRadius: "10px",
                 border: "1px solid #9ca3af",
                 background: "#e5e7eb",
@@ -367,29 +403,7 @@ export default function ProdukceDashboardPage() {
           </div>
         </section>
 
-        {loading && (
-          <p
-            style={{
-              marginTop: "30px",
-              color: "#374151",
-            }}
-          >
-            Načítám kandidáty…
-          </p>
-        )}
-
-        {!loading &&
-          !error &&
-          filteredCandidates.length === 0 && (
-            <p
-              style={{
-                marginTop: "30px",
-                color: "#374151",
-              }}
-            >
-              Žádný kandidát neodpovídá vybraným filtrům.
-            </p>
-          )}
+        {loading && <p>Načítám kandidáty a fotografie…</p>}
 
         <div
           style={{
@@ -404,79 +418,114 @@ export default function ProdukceDashboardPage() {
             <article
               key={candidate.id}
               style={{
-                background: "#ffffff",
+                background: "#fff",
                 color: "#111827",
                 border: "1px solid #d1d5db",
                 borderRadius: "16px",
-                padding: "24px",
+                padding: "20px",
                 boxShadow: "0 3px 10px rgba(0,0,0,0.08)",
               }}
             >
-              <h2
-                style={{
-                  marginTop: 0,
-                  marginBottom: "20px",
-                  color: "#111827",
-                  fontSize: "24px",
-                }}
-              >
+              <h2 style={{ marginTop: 0 }}>
                 {candidate.first_name || ""}{" "}
                 {candidate.last_name || ""}
               </h2>
 
-              <div style={infoStyle}>
-                <strong>Věk:</strong>
-                <span>{candidate.age ?? "—"}</span>
-              </div>
+              {candidate.photos &&
+              candidate.photos.length > 0 ? (
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    overflowX: "auto",
+                    marginBottom: "20px",
+                  }}
+                >
+                  {candidate.photos.map((photo, index) => (
+                    <img
+                      key={photo}
+                      src={photo}
+                      alt={`Fotografie ${index + 1}`}
+                      style={{
+                        width: "160px",
+                        height: "200px",
+                        objectFit: "cover",
+                        borderRadius: "12px",
+                        flexShrink: 0,
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div
+                  style={{
+                    height: "120px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "#f3f4f6",
+                    borderRadius: "12px",
+                    marginBottom: "20px",
+                    color: "#6b7280",
+                  }}
+                >
+                  Žádná fotografie
+                </div>
+              )}
 
-              <div style={infoStyle}>
-                <strong>Pohlaví:</strong>
-                <span>{candidate.gender || "—"}</span>
-              </div>
+              <p>
+                <strong>Věk:</strong>{" "}
+                {candidate.age ?? "—"}
+              </p>
 
-              <div style={infoStyle}>
-                <strong>Role:</strong>
-                <span>{candidate.role || "—"}</span>
-              </div>
+              <p>
+                <strong>Pohlaví:</strong>{" "}
+                {candidate.gender || "—"}
+              </p>
 
-              <div style={infoStyle}>
-                <strong>Město:</strong>
-                <span>{candidate.city || "—"}</span>
-              </div>
+              <p>
+                <strong>Role:</strong>{" "}
+                {candidate.role || "—"}
+              </p>
 
-              <div style={infoStyle}>
-                <strong>Výška:</strong>
-                <span>
-                  {candidate.height_centimetres
+              <p>
+                <strong>Město:</strong>{" "}
+                {candidate.city || "—"}
+              </p>
+
+              <p>
+                <strong>Výška:</strong>{" "}
+                {candidate.height_cm
+                  ? `${candidate.height_cm} cm`
+                  : candidate.height_centimetres
                     ? `${candidate.height_centimetres} cm`
                     : "—"}
-                </span>
-              </div>
+              </p>
 
-              <div style={infoStyle}>
-                <strong>Telefon:</strong>
-                <span>{candidate.phone || "—"}</span>
-              </div>
+              <p>
+                <strong>Telefon:</strong>{" "}
+                {candidate.phone || "—"}
+              </p>
 
-              <div style={infoStyle}>
-                <strong>E-mail:</strong>
-                <span>{candidate.email || "—"}</span>
-              </div>
+              <p>
+                <strong>E-mail:</strong>{" "}
+                {candidate.email || "—"}
+              </p>
 
-              <div style={infoStyle}>
-                <strong>Zkušenosti:</strong>
-                <span>{candidate.experience || "—"}</span>
-              </div>
+              <p>
+                <strong>Zkušenosti:</strong>{" "}
+                {candidate.experience || "—"}
+              </p>
 
-              <div style={infoStyle}>
-                <strong>Dostupnost:</strong>
-                <span>{candidate.availability || "—"}</span>
-              </div>
+              <p>
+                <strong>Dostupnost:</strong>{" "}
+                {candidate.availability || "—"}
+              </p>
 
-              <div style={infoStyle}>
-                <strong>Status:</strong>
-                <span>{candidate.status || "—"}</span>
-              </div>
+              <p>
+                <strong>Status:</strong>{" "}
+                {candidate.status || "—"}
+              </p>
             </article>
           ))}
         </div>
@@ -492,13 +541,4 @@ const selectStyle = {
   background: "#ffffff",
   color: "#111827",
   fontSize: "15px",
-};
-
-const infoStyle = {
-  display: "flex",
-  justifyContent: "space-between",
-  gap: "15px",
-  padding: "10px 0",
-  borderBottom: "1px solid #e5e7eb",
-  color: "#111827",
 };
