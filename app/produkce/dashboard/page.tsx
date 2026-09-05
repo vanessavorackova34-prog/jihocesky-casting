@@ -59,6 +59,8 @@ export default function ProductionDashboard() {
   async function loadCandidates() {
     setLoading(true);
 
+    const supabase = getSupabase();
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -84,6 +86,8 @@ export default function ProductionDashboard() {
   }
 
   async function openCandidate(candidate: Candidate) {
+    const supabase = getSupabase();
+
     setSelectedCandidate(candidate);
     setPhotos([]);
 
@@ -91,7 +95,9 @@ export default function ProductionDashboard() {
       .from('fotky-hercu')
       .list(candidate.id);
 
-    if (error || !data) return;
+    if (error || !data) {
+      return;
+    }
 
     const photoUrls = data
       .filter((file) => {
@@ -116,6 +122,8 @@ export default function ProductionDashboard() {
   }
 
   async function logout() {
+    const supabase = getSupabase();
+
     await supabase.auth.signOut();
     router.push('/produkce');
   }
@@ -346,6 +354,7 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Pohlaví</option>
+
               {genders.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -359,6 +368,7 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Město</option>
+
               {cities.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -372,6 +382,7 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Role</option>
+
               {roles.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -401,6 +412,7 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Zkušenosti</option>
+
               {experiences.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -414,6 +426,7 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Dostupnost</option>
+
               {availabilities.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -427,6 +440,7 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Status</option>
+
               {statuses.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -679,6 +693,8 @@ function CandidateCard({
   }, [candidate.id]);
 
   async function loadPhoto() {
+    const supabase = getSupabase();
+
     const { data, error } = await supabase.storage
       .from('fotky-hercu')
       .list(candidate.id);
