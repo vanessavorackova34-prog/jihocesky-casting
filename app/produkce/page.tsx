@@ -18,23 +18,36 @@ export default function ProdukcePrihlaseniPage() {
   const [loading, setLoading] = useState(false);
 
   async function login(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  e.preventDefault();
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
+  setError("");
+  setLoading(true);
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
       password,
     });
 
     if (error) {
-      setError("Nesprávný e-mail nebo heslo.");
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    if (!data.user) {
+      setError("Přihlášení se nepodařilo.");
       setLoading(false);
       return;
     }
 
     router.push("/produkce");
+  } catch (err) {
+    console.error(err);
+    setError("Nepodařilo se připojit k přihlášení.");
+    setLoading(false);
   }
+}
 
   return (
     <main
