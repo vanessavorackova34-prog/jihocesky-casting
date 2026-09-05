@@ -1,12 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { createBrowserClient } from "@supabase/ssr";
 
-export default function Prihlaseni() {
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+);
+
+export default function ProdukcePrihlaseniPage() {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -14,93 +19,134 @@ export default function Prihlaseni() {
 
   async function login(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
     setError("");
     setLoading(true);
 
     try {
-      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const key =
-        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-      if (!url || !key) {
-        setError("Web není připojený k databázi.");
-        return;
-      }
-
-      const supabase = createBrowserClient(url, key);
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
+      const loginPromise = supabase.auth.signInWithPassword({
+        email: email.trim(),
         password,
       });
 
-      if (error) {
-        setError("Nesprávný e-mail nebo heslo.");
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(
+            new Error(
+              "Supabase neodpovídá. Zkontroluj nastavení Supabase a Vercelu."
+            )
+          );
+        }, 10000);
+      });
+
+      const result = await Promise.race([
+        loginPromise,
+        timeoutPromise,
+      ]);
+
+      if ("error" in result && result.error) {
+        setError(result.error.message);
+        setLoading(false);
         return;
       }
 
-      router.push("/admin");
-      router.refresh();
-    } catch {
+      if ("data" in result && result.data.user) {
+        router.push("/produkce");
+        return;
+      }
+
       setError("Přihlášení se nepodařilo.");
-    } finally {
+      setLoading(false);
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Nastala chyba při přihlášení."
+      );
+
       setLoading(false);
     }
   }
 
   return (
-    <>
-      <header className="top">
-        <div className="logo">
-          🎬 <span>JIHOČESKÝ CASTING</span>
-        </div>
-        <Link className="btn" href="/">
-          Zpět
-        </Link>
-      </header>
+    <main
+      style={{
+        maxWidth: "600px",
+        margin: "0 auto",
+        padding: "60px 20px",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          border: "1px solid #ddd",
+          borderRadius: "16px",
+          padding: "30px",
+        }}
+      >
+        <p>PRO PRODUKCE</p>
 
-      <main className="section">
-        <div
-          className="card"
-          style={{ maxWidth: 500, margin: "auto" }}
+        <h1>Přihlášení</h1>
+
+        <form
+          onSubmit={login}
+          style={{
+            display: "grid",
+            gap: "16px",
+          }}
         >
-          <div className="eyebrow">PRO POŘADATELE</div>
-          <h1>Přihlášení</h1>
+          <label>
+            E-mail
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={{
+                width: "100%",
+                padding: "12px",
+                marginTop: "6px",
+                boxSizing: "border-box",
+              }}
+            />
+          </label>
 
-          {error && <div className="error">{error}</div>}
+          <label>
+            Heslo
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{
+                width: "100%",
+                padding: "12px",
+                marginTop: "6px",
+                boxSizing: "border-box",
+              }}
+            />
+          </label>
 
-          <form onSubmit={login}>
-            <div className="field">
-              <label>E-mail</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
+          {error && (
+            <p style={{ color: "red" }}>
+              {error}
+            </p>
+          )}
 
-            <div className="field">
-              <label>Heslo</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-
-            <button
-              className="btn primary"
-              type="submit"
-              disabled={loading}
-            >
-              {loading ? "Přihlašuji…" : "Přihlásit se"}
-            </button>
-          </form>
-        </div>
-      </main>
-    </>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              padding: "14px",
+              cursor: "pointer",
+            }}
+          >
+            {loading ? "Přihlašuji..." : "Přihlásit se"}
+          </button>
+        </form>
+      </div>
+    </main>
   );
 }
