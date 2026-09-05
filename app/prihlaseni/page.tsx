@@ -1,138 +1,91 @@
 "use client";
-
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-);
-
-export default function ProdukcePrihlaseniPage() {
+import Link from "next/link";
+import { createBrowserClient } from "@supabase/ssr";
+export default function Prihlaseni() {
   const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  async function login(e: React.FormEvent) {
+  async function login(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-
     setError("");
     setLoading(true);
-
     try {
-      const { data, error } =
-        await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
-
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const key =
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      if (!url || !key) {
+        setError("Web není připojený k databázi.");
+        return;
+      }
+      const supabase = createBrowserClient(url, key);
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
       if (error) {
-        setError(error.message);
-        setLoading(false);
+        setError("Nesprávný e-mail nebo heslo.");
         return;
       }
-
-      if (!data.user) {
-        setError("Přihlášení se nepodařilo.");
-        setLoading(false);
-        return;
-      }
-
-      window.location.href = "/produkce";
-    } catch (err) {
-      console.error(err);
-      setError("Nepodařilo se připojit k přihlášení.");
+      router.push("/admin");
+      router.refresh();
+    } catch {
+      setError("Přihlášení se nepodařilo.");
+    } finally {
       setLoading(false);
     }
   }
-
   return (
-    <main
-      style={{
-        maxWidth: "600px",
-        margin: "0 auto",
-        padding: "60px 20px",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      <div
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: "16px",
-          padding: "30px",
-        }}
-      >
-        <p>PRO PRODUKCE</p>
-
-        <h1>Přihlášení</h1>
-
-        <form
-          onSubmit={login}
-          style={{
-            display: "grid",
-            gap: "16px",
-          }}
+    <>
+      <header className="top">
+        <div className="logo">
+          🎬 <span>JIHOČESKÝ CASTING</span>
+        </div>
+        <Link className="btn" href="/">
+          Zpět
+        </Link>
+      </header>
+      <main className="section">
+        <div
+          className="card"
+          style={{ maxWidth: 500, margin: "auto" }}
         >
-          <label>
-            E-mail
-            <input
-              type="email"
-              value={email}
-              onChange={(e) =>
-                setEmail(e.target.value)
-              }
-              required
-              style={{
-                width: "100%",
-                padding: "12px",
-                marginTop: "6px",
-                boxSizing: "border-box",
-              }}
-            />
-          </label>
-
-          <label>
-            Heslo
-            <input
-              type="password"
-              value={password}
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
-              required
-              style={{
-                width: "100%",
-                padding: "12px",
-                marginTop: "6px",
-                boxSizing: "border-box",
-              }}
-            />
-          </label>
-
-          {error && (
-            <p style={{ color: "red" }}>
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              padding: "14px",
-              cursor: "pointer",
-            }}
-          >
-            {loading
-              ? "Přihlašuji..."
-              : "Přihlásit se"}
-          </button>
-        </form>
-      </div>
-    </main>
+          <div className="eyebrow">PRO POŘADATELE</div>
+          <h1>Přihlášení</h1>
+          {error && <div className="error">{error}</div>}
+          <form onSubmit={login}>
+            <div className="field">
+              <label>E-mail</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="field">
+              <label>Heslo</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <button
+              className="btn primary"
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? "Přihlašuji…" : "Přihlásit se"}
+            </button>
+          </form>
+        </div>
+      </main>
+    </>
   );
 }
