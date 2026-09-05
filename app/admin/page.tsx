@@ -49,8 +49,7 @@ export default function AdminPage() {
 
     const { data, error } = await supabase
       .from("candidates")
-      .select("*")
-      .order("created_at", { ascending: false });
+      .select("*");
 
     if (error) {
      setError("Chyba Supabase: " + error.message);
