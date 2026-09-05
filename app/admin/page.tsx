@@ -16,8 +16,8 @@ type Candidate = {
   height_cm: number | null;
   experience: string | null;
   availability: string | null;
-  status: string;
-  created_at: string;
+  status: string | null;
+  photos?: string[];
 };
 
 export default function AdminPage() {
@@ -49,14 +49,38 @@ export default function AdminPage() {
 
     const { data, error } = await supabase
       .from("candidates")
-      .select("*");
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (error) {
-     setError("Chyba Supabase: " + error.message);
-    } else {
-      setCandidates(data || []);
+      setError("Chyba Supabase: " + error.message);
+      setLoading(false);
+      return;
     }
 
+    const withPhotos = await Promise.all(
+      (data || []).map(async (candidate) => {
+        const { data: files } = await supabase.storage
+          .from("fotky-hercu")
+          .list(candidate.id);
+
+        const photos =
+          files?.map((file) => {
+            const { data } = supabase.storage
+              .from("fotky-hercu")
+              .getPublicUrl(`${candidate.id}/${file.name}`);
+
+            return data.publicUrl;
+          }) || [];
+
+        return {
+          ...candidate,
+          photos,
+        };
+      })
+    );
+
+    setCandidates(withPhotos);
     setLoading(false);
   }
 
@@ -71,15 +95,13 @@ export default function AdminPage() {
       .eq("id", id);
 
     if (error) {
-      alert("Chyba Supabase: " + error.message);
+      alert("Stav se nepodařilo změnit: " + error.message);
       return;
     }
 
     setCandidates((current) =>
       current.map((candidate) =>
-        candidate.id === id
-          ? { ...candidate, status }
-          : candidate
+        candidate.id === id ? { ...candidate, status } : candidate
       )
     );
   }
@@ -87,6 +109,12 @@ export default function AdminPage() {
   async function logout() {
     await supabase.auth.signOut();
     router.push("/prihlaseni");
+  }
+
+  function statusText(status: string | null) {
+    if (status === "approved") return "✅ Schváleno";
+    if (status === "rejected") return "❌ Zamítnuto";
+    return "⏳ Čeká na schválení";
   }
 
   return (
@@ -102,145 +130,137 @@ export default function AdminPage() {
       </header>
 
       <main className="section">
-        <div style={{ maxWidth: 1100, margin: "auto" }}>
-          <div className="eyebrow">ADMINISTRACE</div>
+        <div className="eyebrow">ADMINISTRACE</div>
+        <h1>Registrace</h1>
 
-          <h1>Registrace</h1>
+        <p className="muted">
+          Přehled registrovaných herců, komparzistů a dalších talentů.
+        </p>
 
-          <p className="muted">
-            Přehled registrovaných herců, komparzistů a dalších
-            uchazečů.
-          </p>
+        {loading && <p>Načítám registrace…</p>}
 
-          {loading && <p>Načítám registrace…</p>}
+        {error && <div className="error">{error}</div>}
 
-          {error && <div className="error">{error}</div>}
+        {!loading &&
+          candidates.map((candidate) => (
+            <div
+              className="card"
+              key={candidate.id}
+              style={{ marginBottom: 25 }}
+            >
+              <h2>
+                {candidate.first_name} {candidate.last_name}
+              </h2>
 
-          {!loading && candidates.length === 0 && (
-            <div className="card">
-              Zatím zde nejsou žádné registrace.
-            </div>
-          )}
-
-          <div
-            style={{
-              display: "grid",
-              gap: 16,
-              marginTop: 20,
-            }}
-          >
-            {candidates.map((candidate) => (
-              <div className="card" key={candidate.id}>
-                <h2 style={{ marginTop: 0 }}>
-                  {candidate.first_name} {candidate.last_name}
-                </h2>
-
-                <p>
-                  <strong>Věk:</strong> {candidate.age}
-                </p>
-
-                <p>
-                  <strong>Role:</strong> {candidate.role}
-                </p>
-
-                {candidate.city && (
-                  <p>
-                    <strong>Město:</strong> {candidate.city}
-                  </p>
-                )}
-
-                {candidate.height_cm && (
-                  <p>
-                    <strong>Výška:</strong>{" "}
-                    {candidate.height_cm} cm
-                  </p>
-                )}
-
-                {candidate.phone && (
-                  <p>
-                    <strong>Telefon:</strong>{" "}
-                    {candidate.phone}
-                  </p>
-                )}
-
-                {candidate.email && (
-                  <p>
-                    <strong>E-mail:</strong>{" "}
-                    {candidate.email}
-                  </p>
-                )}
-
-                {candidate.experience && (
-                  <p>
-                    <strong>Zkušenosti:</strong>{" "}
-                    {candidate.experience}
-                  </p>
-                )}
-
-                {candidate.availability && (
-                  <p>
-                    <strong>Poznámka:</strong>{" "}
-                    {candidate.availability}
-                  </p>
-                )}
-
-                <p>
-                  <strong>Stav:</strong>{" "}
-                  {candidate.status === "approved"
-                    ? "✅ Schváleno"
-                    : candidate.status === "rejected"
-                    ? "❌ Zamítnuto"
-                    : "⏳ Čeká na schválení"}
-                </p>
-
+              {candidate.photos && candidate.photos.length > 0 && (
                 <div
                   style={{
                     display: "flex",
-                    gap: 8,
-                    flexWrap: "wrap",
-                    marginTop: 15,
+                    gap: 10,
+                    overflowX: "auto",
+                    marginBottom: 20,
                   }}
                 >
-                  <button
-                    className="btn primary"
-                    onClick={() =>
-                      changeStatus(
-                        candidate.id,
-                        "approved"
-                      )
-                    }
-                  >
-                    Schválit
-                  </button>
-
-                  <button
-                    className="btn"
-                    onClick={() =>
-                      changeStatus(
-                        candidate.id,
-                        "rejected"
-                      )
-                    }
-                  >
-                    Zamítnout
-                  </button>
-
-                  <button
-                    className="btn"
-                    onClick={() =>
-                      changeStatus(
-                        candidate.id,
-                        "pending"
-                      )
-                    }
-                  >
-                    Vrátit do čekajících
-                  </button>
+                  {candidate.photos.map((photo, index) => (
+                    <img
+                      key={photo}
+                      src={photo}
+                      alt={`Fotografie ${index + 1}`}
+                      style={{
+                        width: 150,
+                        height: 190,
+                        objectFit: "cover",
+                        borderRadius: 12,
+                        flexShrink: 0,
+                      }}
+                    />
+                  ))}
                 </div>
+              )}
+
+              <p>
+                <b>Věk:</b> {candidate.age}
+              </p>
+
+              <p>
+                <b>Role:</b> {candidate.role || "—"}
+              </p>
+
+              <p>
+                <b>Město:</b> {candidate.city || "—"}
+              </p>
+
+              <p>
+                <b>Výška:</b>{" "}
+                {candidate.height_cm
+                  ? `${candidate.height_cm} cm`
+                  : "—"}
+              </p>
+
+              <p>
+                <b>Telefon:</b> {candidate.phone || "—"}
+              </p>
+
+              <p>
+                <b>E-mail:</b> {candidate.email || "—"}
+              </p>
+
+              <p>
+                <b>Zkušenosti:</b> {candidate.experience || "—"}
+              </p>
+
+              <p>
+                <b>Dostupnost / poznámka:</b>{" "}
+                {candidate.availability || "—"}
+              </p>
+
+              <p>
+                <b>Stav:</b> {statusText(candidate.status)}
+              </p>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  flexWrap: "wrap",
+                  marginTop: 20,
+                }}
+              >
+                <button
+                  className="btn primary"
+                  onClick={() =>
+                    changeStatus(candidate.id, "approved")
+                  }
+                >
+                  Schválit
+                </button>
+
+                <button
+                  className="btn"
+                  onClick={() =>
+                    changeStatus(candidate.id, "rejected")
+                  }
+                >
+                  Zamítnout
+                </button>
+
+                <button
+                  className="btn"
+                  onClick={() =>
+                    changeStatus(candidate.id, "pending")
+                  }
+                >
+                  Vrátit do čekajících
+                </button>
               </div>
-            ))}
+            </div>
+          ))}
+
+        {!loading && candidates.length === 0 && !error && (
+          <div className="card">
+            <p>Zatím zde nejsou žádné registrace.</p>
           </div>
-        </div>
+        )}
       </main>
     </>
   );
