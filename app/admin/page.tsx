@@ -1,4 +1,4 @@
-"use client";
+In place"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -151,26 +151,6 @@ async function deleteCandidate(id: string, name: string) {
   );
 
   alert(`Registrace ${name} byla smazána včetně fotografií.`);
-}
-  );
-
-  if (!confirmed) return;
-
-  const { error } = await supabase
-    .from("candidates")
-    .delete()
-    .eq("id", id);
-
-  if (error) {
-    alert("Registraci se nepodařilo smazat: " + error.message);
-    return;
-  }
-
-  setCandidates((current) =>
-    current.filter((candidate) => candidate.id !== id)
-  );
-
-  alert("Registrace byla smazána.");
 }
   async function logout() {
     await supabase.auth.signOut();
