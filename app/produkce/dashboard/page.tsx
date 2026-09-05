@@ -109,7 +109,6 @@ export default function ProdukceDashboardPage() {
         matchesRole =
           role.includes("herec") ||
           role.includes("herečka") ||
-          role.includes("herečka") ||
           role.includes("actor");
       }
 
@@ -203,222 +202,303 @@ export default function ProdukceDashboardPage() {
   return (
     <main
       style={{
-        maxWidth: "1300px",
-        margin: "0 auto",
+        minHeight: "100vh",
+        background: "#f3f4f6",
+        color: "#111827",
         padding: "40px 20px",
         fontFamily: "Arial, sans-serif",
+        boxSizing: "border-box",
       }}
     >
-      <h1>Produkční panel</h1>
-
-      <p>
-        Celkem kandidátů: <strong>{candidates.length}</strong>
-        {" · "}
-        Zobrazeno: <strong>{filteredCandidates.length}</strong>
-      </p>
-
-      {error && (
-        <p style={{ color: "red" }}>
-          {error}
-        </p>
-      )}
-
       <div
         style={{
-          marginTop: "30px",
-          padding: "20px",
-          border: "1px solid #ddd",
-          borderRadius: "16px",
-          display: "grid",
-          gap: "15px",
+          maxWidth: "1300px",
+          margin: "0 auto",
         }}
       >
-        <h2 style={{ margin: 0 }}>Filtry</h2>
-
-        <input
-          type="text"
-          placeholder="Hledat podle jména, e-mailu nebo města..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+        <h1
           style={{
-            width: "100%",
-            padding: "12px",
-            boxSizing: "border-box",
-            borderRadius: "8px",
-            border: "1px solid #ccc",
+            fontSize: "36px",
+            marginBottom: "8px",
+            color: "#111827",
           }}
-        />
+        >
+          Produkční panel
+        </h1>
+
+        <p style={{ color: "#374151", marginBottom: "30px" }}>
+          Celkem kandidátů: <strong>{candidates.length}</strong>
+          {" · "}
+          Zobrazeno: <strong>{filteredCandidates.length}</strong>
+        </p>
+
+        {error && (
+          <div
+            style={{
+              background: "#fee2e2",
+              color: "#991b1b",
+              padding: "15px",
+              borderRadius: "10px",
+              marginBottom: "20px",
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        <section
+          style={{
+            background: "#ffffff",
+            border: "1px solid #d1d5db",
+            borderRadius: "16px",
+            padding: "24px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+          }}
+        >
+          <h2
+            style={{
+              marginTop: 0,
+              color: "#111827",
+            }}
+          >
+            Filtry
+          </h2>
+
+          <input
+            type="text"
+            placeholder="Hledat podle jména, e-mailu nebo města..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "14px",
+              boxSizing: "border-box",
+              borderRadius: "10px",
+              border: "1px solid #9ca3af",
+              color: "#111827",
+              background: "#ffffff",
+              marginBottom: "15px",
+              fontSize: "15px",
+            }}
+          />
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: "12px",
+            }}
+          >
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              style={selectStyle}
+            >
+              <option>Všichni</option>
+              <option>Herci</option>
+              <option>Komparz</option>
+              <option>Ostatní</option>
+            </select>
+
+            <select
+              value={genderFilter}
+              onChange={(e) => setGenderFilter(e.target.value)}
+              style={selectStyle}
+            >
+              <option>Všichni</option>
+              <option>Ženy</option>
+              <option>Muži</option>
+            </select>
+
+            <select
+              value={ageFilter}
+              onChange={(e) => setAgeFilter(e.target.value)}
+              style={selectStyle}
+            >
+              <option>Všichni</option>
+              <option>0–12</option>
+              <option>13–17</option>
+              <option>18–30</option>
+              <option>31–50</option>
+              <option>51+</option>
+            </select>
+
+            <select
+              value={cityFilter}
+              onChange={(e) => setCityFilter(e.target.value)}
+              style={selectStyle}
+            >
+              <option>Všechna města</option>
+              {cities.map((city) => (
+                <option key={city} value={city || ""}>
+                  {city}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={selectStyle}
+            >
+              <option>Všechny statusy</option>
+              {statuses.map((status) => (
+                <option key={status} value={status || ""}>
+                  {status}
+                </option>
+              ))}
+            </select>
+
+            <button
+              onClick={resetFilters}
+              style={{
+                padding: "13px",
+                cursor: "pointer",
+                borderRadius: "10px",
+                border: "1px solid #9ca3af",
+                background: "#e5e7eb",
+                color: "#111827",
+                fontWeight: "bold",
+              }}
+            >
+              Zrušit filtry
+            </button>
+          </div>
+        </section>
+
+        {loading && (
+          <p
+            style={{
+              marginTop: "30px",
+              color: "#374151",
+            }}
+          >
+            Načítám kandidáty…
+          </p>
+        )}
+
+        {!loading &&
+          !error &&
+          filteredCandidates.length === 0 && (
+            <p
+              style={{
+                marginTop: "30px",
+                color: "#374151",
+              }}
+            >
+              Žádný kandidát neodpovídá vybraným filtrům.
+            </p>
+          )}
 
         <div
           style={{
             display: "grid",
             gridTemplateColumns:
-              "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: "12px",
+              "repeat(auto-fit, minmax(320px, 1fr))",
+            gap: "20px",
+            marginTop: "30px",
           }}
         >
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            style={{ padding: "12px" }}
-          >
-            <option>Všichni</option>
-            <option>Herci</option>
-            <option>Komparz</option>
-            <option>Ostatní</option>
-          </select>
+          {filteredCandidates.map((candidate) => (
+            <article
+              key={candidate.id}
+              style={{
+                background: "#ffffff",
+                color: "#111827",
+                border: "1px solid #d1d5db",
+                borderRadius: "16px",
+                padding: "24px",
+                boxShadow: "0 3px 10px rgba(0,0,0,0.08)",
+              }}
+            >
+              <h2
+                style={{
+                  marginTop: 0,
+                  marginBottom: "20px",
+                  color: "#111827",
+                  fontSize: "24px",
+                }}
+              >
+                {candidate.first_name || ""}{" "}
+                {candidate.last_name || ""}
+              </h2>
 
-          <select
-            value={genderFilter}
-            onChange={(e) => setGenderFilter(e.target.value)}
-            style={{ padding: "12px" }}
-          >
-            <option>Všichni</option>
-            <option>Ženy</option>
-            <option>Muži</option>
-          </select>
+              <div style={infoStyle}>
+                <strong>Věk:</strong>
+                <span>{candidate.age ?? "—"}</span>
+              </div>
 
-          <select
-            value={ageFilter}
-            onChange={(e) => setAgeFilter(e.target.value)}
-            style={{ padding: "12px" }}
-          >
-            <option>Všichni</option>
-            <option>0–12</option>
-            <option>13–17</option>
-            <option>18–30</option>
-            <option>31–50</option>
-            <option>51+</option>
-          </select>
+              <div style={infoStyle}>
+                <strong>Pohlaví:</strong>
+                <span>{candidate.gender || "—"}</span>
+              </div>
 
-          <select
-            value={cityFilter}
-            onChange={(e) => setCityFilter(e.target.value)}
-            style={{ padding: "12px" }}
-          >
-            <option>Všechna města</option>
+              <div style={infoStyle}>
+                <strong>Role:</strong>
+                <span>{candidate.role || "—"}</span>
+              </div>
 
-            {cities.map((city) => (
-              <option key={city} value={city || ""}>
-                {city}
-              </option>
-            ))}
-          </select>
+              <div style={infoStyle}>
+                <strong>Město:</strong>
+                <span>{candidate.city || "—"}</span>
+              </div>
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ padding: "12px" }}
-          >
-            <option>Všechny statusy</option>
+              <div style={infoStyle}>
+                <strong>Výška:</strong>
+                <span>
+                  {candidate.height_centimetres
+                    ? `${candidate.height_centimetres} cm`
+                    : "—"}
+                </span>
+              </div>
 
-            {statuses.map((status) => (
-              <option key={status} value={status || ""}>
-                {status}
-              </option>
-            ))}
-          </select>
+              <div style={infoStyle}>
+                <strong>Telefon:</strong>
+                <span>{candidate.phone || "—"}</span>
+              </div>
 
-          <button
-            onClick={resetFilters}
-            style={{
-              padding: "12px",
-              cursor: "pointer",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-              background: "#f5f5f5",
-            }}
-          >
-            Zrušit filtry
-          </button>
+              <div style={infoStyle}>
+                <strong>E-mail:</strong>
+                <span>{candidate.email || "—"}</span>
+              </div>
+
+              <div style={infoStyle}>
+                <strong>Zkušenosti:</strong>
+                <span>{candidate.experience || "—"}</span>
+              </div>
+
+              <div style={infoStyle}>
+                <strong>Dostupnost:</strong>
+                <span>{candidate.availability || "—"}</span>
+              </div>
+
+              <div style={infoStyle}>
+                <strong>Status:</strong>
+                <span>{candidate.status || "—"}</span>
+              </div>
+            </article>
+          ))}
         </div>
-      </div>
-
-      {loading && <p>Načítám kandidáty…</p>}
-
-      {!loading && !error && filteredCandidates.length === 0 && (
-        <p style={{ marginTop: "30px" }}>
-          Žádný kandidát neodpovídá vybraným filtrům.
-        </p>
-      )}
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit, minmax(300px, 1fr))",
-          gap: "20px",
-          marginTop: "30px",
-        }}
-      >
-        {filteredCandidates.map((candidate) => (
-          <div
-            key={candidate.id}
-            style={{
-              border: "1px solid #ddd",
-              borderRadius: "16px",
-              padding: "20px",
-              background: "#fff",
-            }}
-          >
-            <h2 style={{ marginTop: 0 }}>
-              {candidate.first_name || ""}{" "}
-              {candidate.last_name || ""}
-            </h2>
-
-            <p>
-              <strong>Věk:</strong> {candidate.age ?? "—"}
-            </p>
-
-            <p>
-              <strong>Pohlaví:</strong>{" "}
-              {candidate.gender || "—"}
-            </p>
-
-            <p>
-              <strong>Role:</strong>{" "}
-              {candidate.role || "—"}
-            </p>
-
-            <p>
-              <strong>Město:</strong>{" "}
-              {candidate.city || "—"}
-            </p>
-
-            <p>
-              <strong>Výška:</strong>{" "}
-              {candidate.height_centimetres
-                ? `${candidate.height_centimetres} cm`
-                : "—"}
-            </p>
-
-            <p>
-              <strong>Telefon:</strong>{" "}
-              {candidate.phone || "—"}
-            </p>
-
-            <p>
-              <strong>E-mail:</strong>{" "}
-              {candidate.email || "—"}
-            </p>
-
-            <p>
-              <strong>Zkušenosti:</strong>{" "}
-              {candidate.experience || "—"}
-            </p>
-
-            <p>
-              <strong>Dostupnost:</strong>{" "}
-              {candidate.availability || "—"}
-            </p>
-
-            <p>
-              <strong>Status:</strong>{" "}
-              {candidate.status || "—"}
-            </p>
-          </div>
-        ))}
       </div>
     </main>
   );
 }
+
+const selectStyle = {
+  padding: "13px",
+  borderRadius: "10px",
+  border: "1px solid #9ca3af",
+  background: "#ffffff",
+  color: "#111827",
+  fontSize: "15px",
+};
+
+const infoStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "15px",
+  padding: "10px 0",
+  borderBottom: "1px solid #e5e7eb",
+  color: "#111827",
+};
