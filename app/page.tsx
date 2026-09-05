@@ -42,7 +42,7 @@ export default function Home() {
     Přihlášení pořadatele
   </Link>
 
-  <Link className="btn" href="/prihlaseni">
+  <Link className="btn" href="/produkce">
     Pro produkce
   </Link>
 </div>
