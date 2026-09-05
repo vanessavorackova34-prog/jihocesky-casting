@@ -1,806 +1,841 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { createBrowserClient } from "@supabase/ssr";
+import { useEffect, useState } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
+import { useRouter } from 'next/navigation';
 
 type Candidate = {
-id: string;
-first_name: string;
-last_name: string;
-age: number;
-city: string | null;
-phone: string | null;
-email: string | null;
-role: string;
-height_cm: number | null;
-height_centimetres: number | null;
-experience: string | null;
-availability: string | null;
-status: string | null;
-gender: string | null;
-photos?: string[];
+  id: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  age?: number | null;
+  city?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  role?: string | null;
+  height_cm?: number | null;
+  height_centimetres?: number | null;
+  experience?: string | null;
+  availability?: string | null;
+  status?: string | null;
+  gender?: string | null;
 };
 
-export default function ProdukceDashboard() {
-const router = useRouter();
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
-const [candidates, setCandidates] = useState<Candidate[]>([]);
-const [loading, setLoading] = useState(true);
-const [error, setError] = useState(””);
+export default function ProductionDashboard() {
+  const router = useRouter();
 
-const [search, setSearch] = useState(””);
-const [ageFrom, setAgeFrom] = useState(””);
-const [ageTo, setAgeTo] = useState(””);
-const [gender, setGender] = useState(””);
-const [city, setCity] = useState(””);
-const [role, setRole] = useState(””);
-const [heightFrom, setHeightFrom] = useState(””);
-const [heightTo, setHeightTo] = useState(””);
-const [experience, setExperience] = useState(””);
-const [availability, setAvailability] = useState(””);
-const [status, setStatus] = useState(””);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-const [selectedCandidate, setSelectedCandidate] =
-useState<Candidate | null>(null);
+  const [search, setSearch] = useState('');
+  const [ageFrom, setAgeFrom] = useState('');
+  const [ageTo, setAgeTo] = useState('');
+  const [gender, setGender] = useState('');
+  const [city, setCity] = useState('');
+  const [role, setRole] = useState('');
+  const [heightFrom, setHeightFrom] = useState('');
+  const [heightTo, setHeightTo] = useState('');
+  const [experience, setExperience] = useState('');
+  const [availability, setAvailability] = useState('');
+  const [status, setStatus] = useState('');
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const key =
-process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const [selectedCandidate, setSelectedCandidate] =
+    useState<Candidate | null>(null);
 
-const supabase =
-url && key ? createBrowserClient(url, key) : null;
+  const [photos, setPhotos] = useState<string[]>([]);
 
-useEffect(() => {
-loadCandidates();
-}, []);
+  useEffect(() => {
+    loadCandidates();
+  }, []);
 
-async function loadCandidates() {
-setLoading(true);
-setError(””);
+  async function loadCandidates() {
+    setLoading(true);
+    setError('');
 
-if (!supabase) {
-  setError("Web není připojený k databázi.");
-  setLoading(false);
-  return;
-}
-const {
-  data: { user },
-} = await supabase.auth.getUser();
-if (!user) {
-  router.push("/produkce");
-  return;
-}
-const { data, error } = await supabase
-  .from("candidates")
-  .select("*");
-if (error) {
-  setError("Chyba Supabase: " + error.message);
-  setLoading(false);
-  return;
-}
-const withPhotos = await Promise.all(
-  (data || []).map(async (candidate) => {
-    const { data: files } = await supabase.storage
-      .from("fotky-hercu")
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push('/produkce');
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('candidates')
+      .select('*');
+
+    if (error) {
+      console.error(error);
+      setError('Nepodařilo se načíst uchazeče.');
+      setLoading(false);
+      return;
+    }
+
+    setCandidates(data || []);
+    setLoading(false);
+  }
+
+  async function openCandidate(candidate: Candidate) {
+    setSelectedCandidate(candidate);
+    setPhotos([]);
+
+    const { data, error } = await supabase.storage
+      .from('fotky-hercu')
       .list(candidate.id);
-    const photos =
-      files?.map((file) => {
-        const { data } = supabase.storage
-          .from("fotky-hercu")
-          .getPublicUrl(
-            `${candidate.id}/${file.name}`
-          );
-        return data.publicUrl;
-      }) || [];
-    return {
-      ...candidate,
-      photos,
-    };
-  })
-);
-setCandidates(withPhotos);
-setLoading(false);
 
-}
+    if (error) {
+      console.error(error);
+      return;
+    }
 
-async function logout() {
-if (supabase) {
-await supabase.auth.signOut();
-}
+    if (!data) return;
 
-router.push("/produkce");
+    const photoUrls = data
+      .filter((file) => {
+        const name = file.name.toLowerCase();
 
-}
+        return (
+          name.endsWith('.jpg') ||
+          name.endsWith('.jpeg') ||
+          name.endsWith('.png') ||
+          name.endsWith('.webp')
+        );
+      })
+      .map((file) => {
+        const { data: publicUrl } = supabase.storage
+          .from('fotky-hercu')
+          .getPublicUrl(`${candidate.id}/${file.name}`);
 
-function clearFilters() {
-setSearch(””);
-setAgeFrom(””);
-setAgeTo(””);
-setGender(””);
-setCity(””);
-setRole(””);
-setHeightFrom(””);
-setHeightTo(””);
-setExperience(””);
-setAvailability(””);
-setStatus(””);
-}
+        return publicUrl.publicUrl;
+      });
 
-const cities = Array.from(
-new Set(
-candidates
-.map((candidate) => candidate.city)
-.filter(Boolean)
-)
-).sort();
+    setPhotos(photoUrls);
+  }
 
-const roles = Array.from(
-new Set(
-candidates
-.map((candidate) => candidate.role)
-.filter(Boolean)
-)
-).sort();
+  async function logout() {
+    await supabase.auth.signOut();
+    router.push('/produkce');
+  }
 
-const experiences = Array.from(
-new Set(
-candidates
-.map((candidate) => candidate.experience)
-.filter(Boolean)
-)
-).sort();
+  function clearFilters() {
+    setSearch('');
+    setAgeFrom('');
+    setAgeTo('');
+    setGender('');
+    setCity('');
+    setRole('');
+    setHeightFrom('');
+    setHeightTo('');
+    setExperience('');
+    setAvailability('');
+    setStatus('');
+  }
 
-const availabilities = Array.from(
-new Set(
-candidates
-.map((candidate) => candidate.availability)
-.filter(Boolean)
-)
-).sort();
+  const cities = Array.from(
+    new Set(
+      candidates
+        .map((candidate) => candidate.city)
+        .filter(Boolean)
+    )
+  ).sort();
 
-const statuses = Array.from(
-new Set(
-candidates
-.map((candidate) => candidate.status)
-.filter(Boolean)
-)
-).sort();
+  const roles = Array.from(
+    new Set(
+      candidates
+        .map((candidate) => candidate.role)
+        .filter(Boolean)
+    )
+  ).sort();
 
-const visibleCandidates = candidates.filter((candidate) => {
-const text = search.toLowerCase().trim();
+  const genders = Array.from(
+    new Set(
+      candidates
+        .map((candidate) => candidate.gender)
+        .filter(Boolean)
+    )
+  ).sort();
 
-const name =
-  `${candidate.first_name} ${candidate.last_name}`.toLowerCase();
-const matchesSearch =
-  !text ||
-  name.includes(text) ||
-  (candidate.email || "").toLowerCase().includes(text) ||
-  (candidate.city || "").toLowerCase().includes(text) ||
-  (candidate.role || "").toLowerCase().includes(text);
-const matchesAgeFrom =
-  !ageFrom || candidate.age >= Number(ageFrom);
-const matchesAgeTo =
-  !ageTo || candidate.age <= Number(ageTo);
-const candidateHeight =
-  candidate.height_cm ??
-  candidate.height_centimetres ??
-  null;
-const matchesHeightFrom =
-  !heightFrom ||
-  (candidateHeight !== null &&
-    candidateHeight >= Number(heightFrom));
-const matchesHeightTo =
-  !heightTo ||
-  (candidateHeight !== null &&
-    candidateHeight <= Number(heightTo));
-const matchesGender =
-  !gender ||
-  (candidate.gender || "").toLowerCase() ===
-    gender.toLowerCase();
-const matchesCity =
-  !city ||
-  (candidate.city || "").toLowerCase() ===
-    city.toLowerCase();
-const matchesRole =
-  !role ||
-  (candidate.role || "").toLowerCase() ===
-    role.toLowerCase();
-const matchesExperience =
-  !experience ||
-  (candidate.experience || "").toLowerCase() ===
-    experience.toLowerCase();
-const matchesAvailability =
-  !availability ||
-  (candidate.availability || "").toLowerCase() ===
-    availability.toLowerCase();
-const matchesStatus =
-  !status ||
-  (candidate.status || "").toLowerCase() ===
-    status.toLowerCase();
-return (
-  matchesSearch &&
-  matchesAgeFrom &&
-  matchesAgeTo &&
-  matchesHeightFrom &&
-  matchesHeightTo &&
-  matchesGender &&
-  matchesCity &&
-  matchesRole &&
-  matchesExperience &&
-  matchesAvailability &&
-  matchesStatus
-);
+  const experiences = Array.from(
+    new Set(
+      candidates
+        .map((candidate) => candidate.experience)
+        .filter(Boolean)
+    )
+  ).sort();
 
-});
+  const availabilities = Array.from(
+    new Set(
+      candidates
+        .map((candidate) => candidate.availability)
+        .filter(Boolean)
+    )
+  ).sort();
 
-const inputStyle = {
-width: “100%”,
-boxSizing: “border-box” as const,
-padding: “12px 14px”,
-background: “#111”,
-color: “#fff”,
-border: “1px solid #333”,
-borderRadius: 8,
-fontSize: 14,
-outline: “none”,
-};
+  const statuses = Array.from(
+    new Set(
+      candidates
+        .map((candidate) => candidate.status)
+        .filter(Boolean)
+    )
+  ).sort();
 
-const selectStyle = {
-…inputStyle,
-cursor: “pointer”,
-};
+  const filteredCandidates = candidates.filter((candidate) => {
+    const searchText = search.toLowerCase().trim();
 
-return (
-<main
-style={{
-minHeight: “100vh”,
-background: “#000”,
-color: “#fff”,
-padding: “30px 20px”,
-}}
->
-<div
-style={{
-maxWidth: 1200,
-margin: “0 auto”,
-}}
->
-<header
-style={{
-display: “flex”,
-justifyContent: “space-between”,
-alignItems: “center”,
-gap: 20,
-marginBottom: 40,
-flexWrap: “wrap”,
-}}
->
-<div
-style={{
-fontSize: 13,
-letterSpacing: 3,
-color: “#aaa”,
-marginBottom: 8,
-}}
->
-JIHOČESKÝ CASTING
-        <h1
-          style={{
-            margin: 0,
-            fontSize: 38,
-            fontWeight: 700,
-          }}
-        >
-          Produkce
-        </h1>
-      </div>
-      <button
-        onClick={logout}
-        style={{
-          background: "#fff",
-          color: "#000",
-          border: "none",
-          borderRadius: 8,
-          padding: "12px 20px",
-          fontWeight: 600,
-          cursor: "pointer",
-        }}
-      >
-        Odhlásit se
-      </button>
-    </header>
-    <div
+    const fullName = `${candidate.first_name || ''} ${
+      candidate.last_name || ''
+    }`.toLowerCase();
+
+    const matchesSearch =
+      !searchText ||
+      fullName.includes(searchText) ||
+      (candidate.email || '').toLowerCase().includes(searchText) ||
+      (candidate.city || '').toLowerCase().includes(searchText) ||
+      (candidate.role || '').toLowerCase().includes(searchText);
+
+    const age = Number(candidate.age);
+
+    const matchesAgeFrom =
+      !ageFrom || (!Number.isNaN(age) && age >= Number(ageFrom));
+
+    const matchesAgeTo =
+      !ageTo || (!Number.isNaN(age) && age <= Number(ageTo));
+
+    const matchesGender =
+      !gender || candidate.gender === gender;
+
+    const matchesCity =
+      !city || candidate.city === city;
+
+    const matchesRole =
+      !role || candidate.role === role;
+
+    const height =
+      candidate.height_cm ?? candidate.height_centimetres ?? null;
+
+    const matchesHeightFrom =
+      !heightFrom ||
+      (height !== null && height >= Number(heightFrom));
+
+    const matchesHeightTo =
+      !heightTo ||
+      (height !== null && height <= Number(heightTo));
+
+    const matchesExperience =
+      !experience || candidate.experience === experience;
+
+    const matchesAvailability =
+      !availability || candidate.availability === availability;
+
+    const matchesStatus =
+      !status || candidate.status === status;
+
+    return (
+      matchesSearch &&
+      matchesAgeFrom &&
+      matchesAgeTo &&
+      matchesGender &&
+      matchesCity &&
+      matchesRole &&
+      matchesHeightFrom &&
+      matchesHeightTo &&
+      matchesExperience &&
+      matchesAvailability &&
+      matchesStatus
+    );
+  });
+
+  return (
+    <main
       style={{
-        background: "#111",
-        border: "1px solid #222",
-        borderRadius: 12,
-        padding: 20,
-        marginBottom: 25,
+        minHeight: '100vh',
+        background: '#f5f5f5',
+        padding: '30px',
       }}
     >
-      <h2
-        style={{
-          margin: "0 0 18px",
-          fontSize: 20,
-        }}
-      >
-        Filtrování kandidátů
-      </h2>
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: 12,
+          maxWidth: '1400px',
+          margin: '0 auto',
         }}
       >
-        <input
-          type="text"
-          placeholder="Hledat jméno, město, roli..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={inputStyle}
-        />
-        <input
-          type="number"
-          placeholder="Věk od"
-          value={ageFrom}
-          onChange={(e) => setAgeFrom(e.target.value)}
-          style={inputStyle}
-        />
-        <input
-          type="number"
-          placeholder="Věk do"
-          value={ageTo}
-          onChange={(e) => setAgeTo(e.target.value)}
-          style={inputStyle}
-        />
-        <select
-          value={gender}
-          onChange={(e) => setGender(e.target.value)}
-          style={selectStyle}
-        >
-          <option value="">Pohlaví – vše</option>
-          <option value="Žena">Žena</option>
-          <option value="Muž">Muž</option>
-        </select>
-        <select
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          style={selectStyle}
-        >
-          <option value="">Město – vše</option>
-          {cities.map((item) => (
-            <option key={String(item)} value={String(item)}>
-              {String(item)}
-            </option>
-          ))}
-        </select>
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          style={selectStyle}
-        >
-          <option value="">Role – všechny</option>
-          {roles.map((item) => (
-            <option key={String(item)} value={String(item)}>
-              {String(item)}
-            </option>
-          ))}
-        </select>
-        <input
-          type="number"
-          placeholder="Výška od (cm)"
-          value={heightFrom}
-          onChange={(e) => setHeightFrom(e.target.value)}
-          style={inputStyle}
-        />
-        <input
-          type="number"
-          placeholder="Výška do (cm)"
-          value={heightTo}
-          onChange={(e) => setHeightTo(e.target.value)}
-          style={inputStyle}
-        />
-        <select
-          value={experience}
-          onChange={(e) => setExperience(e.target.value)}
-          style={selectStyle}
-        >
-          <option value="">Zkušenosti – všechny</option>
-          {experiences.map((item) => (
-            <option key={String(item)} value={String(item)}>
-              {String(item)}
-            </option>
-          ))}
-        </select>
-        <select
-          value={availability}
-          onChange={(e) =>
-            setAvailability(e.target.value)
-          }
-          style={selectStyle}
-        >
-          <option value="">Dostupnost – všechny</option>
-          {availabilities.map((item) => (
-            <option key={String(item)} value={String(item)}>
-              {String(item)}
-            </option>
-          ))}
-        </select>
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          style={selectStyle}
-        >
-          <option value="">Status – všechny</option>
-          {statuses.map((item) => (
-            <option key={String(item)} value={String(item)}>
-              {String(item)}
-            </option>
-          ))}
-        </select>
-      </div>
-      <button
-        onClick={clearFilters}
-        style={{
-          marginTop: 15,
-          background: "#fff",
-          color: "#000",
-          border: "none",
-          borderRadius: 8,
-          padding: "11px 18px",
-          fontWeight: 600,
-          cursor: "pointer",
-        }}
-      >
-        Vymazat filtry
-      </button>
-      <div
-        style={{
-          marginTop: 15,
-          color: "#aaa",
-          fontSize: 14,
-        }}
-      >
-        Zobrazeno kandidátů: {visibleCandidates.length} z{" "}
-        {candidates.length}
-      </div>
-    </div>
-    {loading && (
-      <div
-        style={{
-          padding: 30,
-          textAlign: "center",
-          background: "#111",
-          borderRadius: 10,
-        }}
-      >
-        Načítám registrace...
-      </div>
-    )}
-    {error && (
-      <div
-        style={{
-          padding: 20,
-          background: "#2a1111",
-          border: "1px solid #662222",
-          borderRadius: 10,
-          color: "#ffaaaa",
-          marginBottom: 20,
-        }}
-      >
-        {error}
-      </div>
-    )}
-    {!loading &&
-      !error &&
-      visibleCandidates.length === 0 && (
         <div
           style={{
-            padding: 40,
-            textAlign: "center",
-            background: "#111",
-            borderRadius: 10,
-            color: "#aaa",
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '25px',
+            gap: '15px',
+            flexWrap: 'wrap',
           }}
         >
-          Žádné registrace nebyly nalezeny.
+          <div>
+            <h1 style={{ margin: 0 }}>
+              Produkce
+            </h1>
+
+            <p style={{ marginTop: '6px', color: '#666' }}>
+              Přehled přihlášených uchazečů
+            </p>
+          </div>
+
+          <button
+            onClick={logout}
+            style={{
+              padding: '10px 18px',
+              borderRadius: '8px',
+              border: '1px solid #ccc',
+              background: 'white',
+              cursor: 'pointer',
+            }}
+          >
+            Odhlásit
+          </button>
+        </div>
+
+        {error && (
+          <div
+            style={{
+              background: '#ffe5e5',
+              color: '#b00000',
+              padding: '15px',
+              borderRadius: '10px',
+              marginBottom: '20px',
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        <section
+          style={{
+            background: 'white',
+            padding: '20px',
+            borderRadius: '15px',
+            marginBottom: '25px',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+          }}
+        >
+          <h2 style={{ marginTop: 0 }}>
+            Filtrování
+          </h2>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: '12px',
+            }}
+          >
+            <input
+              type="text"
+              placeholder="Hledat..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={inputStyle}
+            />
+
+            <input
+              type="number"
+              placeholder="Věk od"
+              value={ageFrom}
+              onChange={(e) => setAgeFrom(e.target.value)}
+              style={inputStyle}
+            />
+
+            <input
+              type="number"
+              placeholder="Věk do"
+              value={ageTo}
+              onChange={(e) => setAgeTo(e.target.value)}
+              style={inputStyle}
+            />
+
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">Pohlaví</option>
+
+              {genders.map((item) => (
+                <option key={item} value={item || ''}>
+                  {item}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">Město</option>
+
+              {cities.map((item) => (
+                <option key={item} value={item || ''}>
+                  {item}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">Role</option>
+
+              {roles.map((item) => (
+                <option key={item} value={item || ''}>
+                  {item}
+                </option>
+              ))}
+            </select>
+
+            <input
+              type="number"
+              placeholder="Výška od"
+              value={heightFrom}
+              onChange={(e) => setHeightFrom(e.target.value)}
+              style={inputStyle}
+            />
+
+            <input
+              type="number"
+              placeholder="Výška do"
+              value={heightTo}
+              onChange={(e) => setHeightTo(e.target.value)}
+              style={inputStyle}
+            />
+
+            <select
+              value={experience}
+              onChange={(e) => setExperience(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">Zkušenosti</option>
+
+              {experiences.map((item) => (
+                <option key={item} value={item || ''}>
+                  {item}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={availability}
+              onChange={(e) => setAvailability(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">Dostupnost</option>
+
+              {availabilities.map((item) => (
+                <option key={item} value={item || ''}>
+                  {item}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">Status</option>
+
+              {statuses.map((item) => (
+                <option key={item} value={item || ''}>
+                  {item}
+                </option>
+              ))}
+            </select>
+
+            <button
+              onClick={clearFilters}
+              style={{
+                padding: '12px',
+                borderRadius: '8px',
+                border: 'none',
+                background: '#222',
+                color: 'white',
+                cursor: 'pointer',
+              }}
+            >
+              Vymazat filtry
+            </button>
+          </div>
+
+          <div
+            style={{
+              marginTop: '15px',
+              color: '#666',
+            }}
+          >
+            Zobrazeno: <strong>{filteredCandidates.length}</strong>{' '}
+            z {candidates.length}
+          </div>
+        </section>
+
+        {loading ? (
+          <div
+            style={{
+              background: 'white',
+              padding: '30px',
+              borderRadius: '15px',
+              textAlign: 'center',
+            }}
+          >
+            Načítám uchazeče...
+          </div>
+        ) : filteredCandidates.length === 0 ? (
+          <div
+            style={{
+              background: 'white',
+              padding: '30px',
+              borderRadius: '15px',
+              textAlign: 'center',
+            }}
+          >
+            Žádní uchazeči neodpovídají filtrům.
+          </div>
+        ) : (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                'repeat(auto-fill, minmax(260px, 1fr))',
+              gap: '20px',
+            }}
+          >
+            {filteredCandidates.map((candidate) => (
+              <CandidateCard
+                key={candidate.id}
+                candidate={candidate}
+                onClick={() => openCandidate(candidate)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {selectedCandidate && (
+        <div
+          onClick={() => setSelectedCandidate(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.65)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '20px',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'white',
+              borderRadius: '15px',
+              maxWidth: '900px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              padding: '25px',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '15px',
+              }}
+            >
+              <h2 style={{ marginTop: 0 }}>
+                {selectedCandidate.first_name}{' '}
+                {selectedCandidate.last_name}
+              </h2>
+
+              <button
+                onClick={() => setSelectedCandidate(null)}
+                style={{
+                  border: 'none',
+                  background: '#eee',
+                  borderRadius: '50%',
+                  width: '38px',
+                  height: '38px',
+                  cursor: 'pointer',
+                  fontSize: '18px',
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {photos.length > 0 && (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns:
+                    'repeat(auto-fill, minmax(180px, 1fr))',
+                  gap: '12px',
+                  marginBottom: '25px',
+                }}
+              >
+                {photos.map((photo, index) => (
+                  <img
+                    key={photo}
+                    src={photo}
+                    alt={`Fotka ${index + 1}`}
+                    style={{
+                      width: '100%',
+                      height: '220px',
+                      objectFit: 'cover',
+                      borderRadius: '10px',
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns:
+                  'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: '15px',
+              }}
+            >
+              <Info
+                label="Jméno"
+                value={`${selectedCandidate.first_name || ''} ${
+                  selectedCandidate.last_name || ''
+                }`}
+              />
+
+              <Info
+                label="Věk"
+                value={selectedCandidate.age}
+              />
+
+              <Info
+                label="Pohlaví"
+                value={selectedCandidate.gender}
+              />
+
+              <Info
+                label="Město"
+                value={selectedCandidate.city}
+              />
+
+              <Info
+                label="Telefon"
+                value={selectedCandidate.phone}
+              />
+
+              <Info
+                label="E-mail"
+                value={selectedCandidate.email}
+              />
+
+              <Info
+                label="Role"
+                value={selectedCandidate.role}
+              />
+
+              <Info
+                label="Výška"
+                value={
+                  selectedCandidate.height_cm ??
+                  selectedCandidate.height_centimetres
+                    ? `${selectedCandidate.height_cm ?? selectedCandidate.height_centimetres} cm`
+                    : ''
+                }
+              />
+
+              <Info
+                label="Zkušenosti"
+                value={selectedCandidate.experience}
+              />
+
+              <Info
+                label="Dostupnost"
+                value={selectedCandidate.availability}
+              />
+
+              <Info
+                label="Status"
+                value={selectedCandidate.status}
+              />
+            </div>
+          </div>
         </div>
       )}
+    </main>
+  );
+}
+
+function CandidateCard({
+  candidate,
+  onClick,
+}: {
+  candidate: Candidate;
+  onClick: () => void;
+}) {
+  const [photo, setPhoto] = useState('');
+
+  useEffect(() => {
+    loadPhoto();
+  }, [candidate.id]);
+
+  async function loadPhoto() {
+    const { data, error } = await supabase.storage
+      .from('fotky-hercu')
+      .list(candidate.id);
+
+    if (error || !data) return;
+
+    const file = data.find((item) => {
+      const name = item.name.toLowerCase();
+
+      return (
+        name.endsWith('.jpg') ||
+        name.endsWith('.jpeg') ||
+        name.endsWith('.png') ||
+        name.endsWith('.webp')
+      );
+    });
+
+    if (!file) return;
+
+    const { data: publicUrl } = supabase.storage
+      .from('fotky-hercu')
+      .getPublicUrl(`${candidate.id}/${file.name}`);
+
+    setPhoto(publicUrl.publicUrl);
+  }
+
+  return (
     <div
+      onClick={onClick}
       style={{
-        display: "grid",
-        gridTemplateColumns:
-          "repeat(auto-fill, minmax(280px, 1fr))",
-        gap: 20,
+        background: 'white',
+        borderRadius: '15px',
+        overflow: 'hidden',
+        cursor: 'pointer',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
       }}
     >
-      {visibleCandidates.map((candidate) => (
-        <div
-          key={candidate.id}
+      {photo ? (
+        <img
+          src={photo}
+          alt={`${candidate.first_name || ''} ${
+            candidate.last_name || ''
+          }`}
           style={{
-            background: "#111",
-            border: "1px solid #222",
-            borderRadius: 12,
-            overflow: "hidden",
+            width: '100%',
+            height: '300px',
+            objectFit: 'cover',
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            height: '300px',
+            background: '#eee',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: '#777',
           }}
         >
-          {candidate.photos &&
-          candidate.photos.length > 0 ? (
-            <img
-              src={candidate.photos[0]}
-              alt={`${candidate.first_name} ${candidate.last_name}`}
-              style={{
-                width: "100%",
-                height: 300,
-                objectFit: "cover",
-                display: "block",
-              }}
-            />
-          ) : (
-            <div
-              style={{
-                height: 300,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "#181818",
-                color: "#777",
-              }}
-            >
-              Žádná fotografie
-            </div>
-          )}
-          <div style={{ padding: 20 }}>
-            <h2
-              style={{
-                margin: "0 0 8px",
-                fontSize: 22,
-              }}
-            >
-              {candidate.first_name}{" "}
-              {candidate.last_name}
-            </h2>
-            <div
-              style={{
-                color: "#aaa",
-                marginBottom: 5,
-              }}
-            >
-              {candidate.age} let
-            </div>
-            {candidate.city && (
-              <div
-                style={{
-                  color: "#aaa",
-                  marginBottom: 5,
-                }}
-              >
-                📍 {candidate.city}
-              </div>
-            )}
-            <div
-              style={{
-                color: "#aaa",
-                marginBottom: 15,
-              }}
-            >
-              🎬 {candidate.role}
-            </div>
-            <button
-              onClick={() =>
-                setSelectedCandidate(candidate)
-              }
-              style={{
-                width: "100%",
-                background: "#fff",
-                color: "#000",
-                border: "none",
-                borderRadius: 7,
-                padding: "12px",
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              Zobrazit profil
-            </button>
-          </div>
+          Bez fotografie
         </div>
-      ))}
-    </div>
-    {selectedCandidate && (
-      <div
-        onClick={() => setSelectedCandidate(null)}
-        style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(0,0,0,0.85)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 20,
-          zIndex: 1000,
-          overflowY: "auto",
-        }}
-      >
-        <div
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            width: "100%",
-            maxWidth: 800,
-            background: "#111",
-            border: "1px solid #333",
-            borderRadius: 12,
-            padding: 25,
-            maxHeight: "90vh",
-            overflowY: "auto",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 20,
-              gap: 20,
-            }}
-          >
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 28,
-              }}
-            >
-              {selectedCandidate.first_name}{" "}
-              {selectedCandidate.last_name}
-            </h2>
-            <button
-              onClick={() =>
-                setSelectedCandidate(null)
-              }
-              style={{
-                background: "transparent",
-                color: "#fff",
-                border: "1px solid #444",
-                borderRadius: 6,
-                padding: "8px 12px",
-                cursor: "pointer",
-                fontSize: 18,
-              }}
-            >
-              ×
-            </button>
-          </div>
-          {selectedCandidate.photos &&
-            selectedCandidate.photos.length > 0 && (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns:
-                    "repeat(auto-fill, minmax(180px, 1fr))",
-                  gap: 12,
-                  marginBottom: 25,
-                }}
-              >
-                {selectedCandidate.photos.map(
-                  (photo, index) => (
-                    <img
-                      key={index}
-                      src={photo}
-                      alt={`Fotografie ${index + 1}`}
-                      style={{
-                        width: "100%",
-                        height: 220,
-                        objectFit: "cover",
-                        borderRadius: 8,
-                      }}
-                    />
-                  )
-                )}
-              </div>
-            )}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: 15,
-            }}
-          >
-            <Info
-              label="Věk"
-              value={`${selectedCandidate.age} let`}
-            />
-            <Info
-              label="Město"
-              value={selectedCandidate.city}
-            />
-            <Info
-              label="Telefon"
-              value={selectedCandidate.phone}
-            />
-            <Info
-              label="E-mail"
-              value={selectedCandidate.email}
-            />
-            <Info
-              label="Role"
-              value={selectedCandidate.role}
-            />
-            <Info
-              label="Pohlaví"
-              value={selectedCandidate.gender}
-            />
-            <Info
-              label="Výška"
-              value={
-                selectedCandidate.height_cm
-                  ? `${selectedCandidate.height_cm} cm`
-                  : selectedCandidate.height_centimetres
-                  ? `${selectedCandidate.height_centimetres} cm`
-                  : null
-              }
-            />
-            <Info
-              label="Zkušenosti"
-              value={selectedCandidate.experience}
-            />
-            <Info
-              label="Dostupnost"
-              value={selectedCandidate.availability}
-            />
-            <Info
-              label="Status"
-              value={selectedCandidate.status}
-            />
-          </div>
-        </div>
-      </div>
-    )}
-  </div>
-</main>
+      )}
 
-);
+      <div style={{ padding: '15px' }}>
+        <h3 style={{ margin: '0 0 8px' }}>
+          {candidate.first_name} {candidate.last_name}
+        </h3>
+
+        <p style={{ margin: '4px 0', color: '#666' }}>
+          Věk: {candidate.age || '-'}
+        </p>
+
+        <p style={{ margin: '4px 0', color: '#666' }}>
+          Město: {candidate.city || '-'}
+        </p>
+
+        <p style={{ margin: '4px 0', color: '#666' }}>
+          Role: {candidate.role || '-'}
+        </p>
+
+        <p
+          style={{
+            marginTop: '12px',
+            fontWeight: 'bold',
+          }}
+        >
+          Zobrazit detail →
+        </p>
+      </div>
+    </div>
+  );
 }
 
 function Info({
-label,
-value,
+  label,
+  value,
 }: {
-label: string;
-value: string | number | null | undefined;
+  label: string;
+  value?: string | number | null;
 }) {
-return (
-<div
-style={{
-background: “#181818”,
-borderRadius: 8,
-padding: 15,
-}}
->
-<div
-style={{
-fontSize: 12,
-color: “#777”,
-textTransform: “uppercase”,
-letterSpacing: 1,
-marginBottom: 6,
-}}
->
-{label}
-  <div
-    style={{
-      fontSize: 16,
-      color: "#fff",
-      wordBreak: "break-word",
-    }}
-  >
-    {value || "Neuvedeno"}
-  </div>
-</div>
+  return (
+    <div
+      style={{
+        background: '#f7f7f7',
+        padding: '12px',
+        borderRadius: '8px',
+      }}
+    >
+      <div
+        style={{
+          fontSize: '12px',
+          color: '#777',
+          marginBottom: '4px',
+        }}
+      >
+        {label}
+      </div>
 
-);
+      <div
+        style={{
+          fontWeight: '500',
+          wordBreak: 'break-word',
+        }}
+      >
+        {value || '-'}
+      </div>
+    </div>
+  );
 }
+
+const inputStyle = {
+  width: '100%',
+  boxSizing: 'border-box' as const,
+  padding: '12px',
+  borderRadius: '8px',
+  border: '1px solid #ccc',
+  background: 'white',
+  fontSize: '14px',
+};
