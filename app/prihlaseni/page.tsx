@@ -24,39 +24,24 @@ export default function ProdukcePrihlaseniPage() {
     setLoading(true);
 
     try {
-      const loginPromise = supabase.auth.signInWithPassword({
+      const result = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
 
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => {
-          reject(
-            new Error(
-              "Supabase neodpovídá. Zkontroluj nastavení Supabase a Vercelu."
-            )
-          );
-        }, 10000);
-      });
-
-      const result = await Promise.race([
-        loginPromise,
-        timeoutPromise,
-      ]);
-
-      if ("error" in result && result.error) {
+      if (result.error) {
         setError(result.error.message);
         setLoading(false);
         return;
       }
 
-      if ("data" in result && result.data.user) {
-        router.push("/produkce");
+      if (!result.data.user) {
+        setError("Přihlášení se nepodařilo.");
+        setLoading(false);
         return;
       }
 
-      setError("Přihlášení se nepodařilo.");
-      setLoading(false);
+      router.push("/produkce");
     } catch (err) {
       console.error(err);
 
@@ -140,7 +125,7 @@ export default function ProdukcePrihlaseniPage() {
             disabled={loading}
             style={{
               padding: "14px",
-              cursor: "pointer",
+              cursor: loading ? "default" : "pointer",
             }}
           >
             {loading ? "Přihlašuji..." : "Přihlásit se"}
