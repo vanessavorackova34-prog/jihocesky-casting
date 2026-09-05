@@ -200,7 +200,14 @@ export default function Registration() {
                   required
                 />
               </div>
-
+<div className="field">
+  <label>Pohlaví *</label>
+  <select name="gender" required>
+    <option value="">Vyberte</option>
+    <option value="male">Muž / chlapec</option>
+    <option value="female">Žena / dívka</option>
+  </select>
+</div>
               <div className="field">
                 <label>Město</label>
                 <input name="city" />
