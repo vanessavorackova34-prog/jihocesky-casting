@@ -71,6 +71,7 @@ export default function Registration() {
         first_name: f.get("first_name"),
         last_name: f.get("last_name"),
         age: Number(f.get("age")),
+        gender: f.get("gender"),
         city: f.get("city"),
         phone: f.get("phone"),
         email: f.get("email"),
