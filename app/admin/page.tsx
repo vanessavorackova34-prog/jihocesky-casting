@@ -25,7 +25,7 @@ export default function AdminPage() {
 
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [filter, setFilter] = useState<"pending" | "approved" | "rejected">("pending");
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const key =
@@ -134,14 +134,44 @@ export default function AdminPage() {
 
         <p className="muted">
           Přehled registrovaných herců, komparzistů a dalších talentů.
-        </p>
+        </p><div
+  style={{
+    display: "flex",
+    gap: 10,
+    flexWrap: "wrap",
+    marginBottom: 20,
+  }}
+>
+  <button
+    className="btn"
+    onClick={() => setFilter("pending")}
+  >
+    ⏳ Čekající
+  </button>
+
+  <button
+    className="btn"
+    onClick={() => setFilter("approved")}
+  >
+    ✅ Schválení
+  </button>
+
+  <button
+    className="btn"
+    onClick={() => setFilter("rejected")}
+  >
+    ❌ Zamítnutí
+  </button>
+</div>
 
         {loading && <p>Načítám registrace…</p>}
 
         {error && <div className="error">{error}</div>}
 
         {!loading &&
-          candidates.map((candidate) => (
+          candidates
+  .filter((candidate) => (candidate.status || "pending") === filter)
+  .map((candidate) => (
             <div
               className="card"
               key={candidate.id}
