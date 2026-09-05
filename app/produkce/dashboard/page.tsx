@@ -1,8 +1,8 @@
-"use "use client";
+"use client";
 
-import { useEffect, useState } from “react”;
+import { useEffect, useState } from "react";
 import { useRouter } from “next/navigation”;
-import { createBrowserClient } from “@supabase/ssr”;
+import { createBrowserClient } from "@supabase/ssr";
 
 type Candidate = {
 id: string;
