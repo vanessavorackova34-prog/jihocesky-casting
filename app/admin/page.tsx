@@ -53,7 +53,7 @@ export default function AdminPage() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      setError("Nepodařilo se načíst registrace.");
+     setError("Chyba Supabase: " + error.message);
     } else {
       setCandidates(data || []);
     }
