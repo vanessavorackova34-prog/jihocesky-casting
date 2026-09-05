@@ -257,29 +257,16 @@ export default function ProductionDashboard() {
           }}
         >
           <div>
-            <h1
-              style={{
-                margin: 0,
-                fontSize: '32px',
-              }}
-            >
+            <h1 style={{ margin: 0, fontSize: '32px' }}>
               Produkce
             </h1>
 
-            <p
-              style={{
-                color: '#aaa',
-                marginTop: '6px',
-              }}
-            >
+            <p style={{ color: '#aaa', marginTop: '6px' }}>
               Přehled přihlášených uchazečů
             </p>
           </div>
 
-          <button
-            onClick={logout}
-            style={buttonStyle}
-          >
+          <button onClick={logout} style={buttonStyle}>
             Odhlásit
           </button>
         </header>
@@ -308,12 +295,7 @@ export default function ProductionDashboard() {
             marginBottom: '25px',
           }}
         >
-          <h2
-            style={{
-              marginTop: 0,
-              marginBottom: '18px',
-            }}
-          >
+          <h2 style={{ marginTop: 0, marginBottom: '18px' }}>
             Filtrování
           </h2>
 
@@ -354,7 +336,6 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Pohlaví</option>
-
               {genders.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -368,7 +349,6 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Město</option>
-
               {cities.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -382,7 +362,6 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Role</option>
-
               {roles.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -412,7 +391,6 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Zkušenosti</option>
-
               {experiences.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -426,7 +404,6 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Dostupnost</option>
-
               {availabilities.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -440,7 +417,6 @@ export default function ProductionDashboard() {
               style={inputStyle}
             >
               <option value="">Status</option>
-
               {statuses.map((item) => (
                 <option key={item} value={item || ''}>
                   {item}
@@ -617,35 +593,12 @@ export default function ProductionDashboard() {
                 }`}
               />
 
-              <Info
-                label="Věk"
-                value={selectedCandidate.age}
-              />
-
-              <Info
-                label="Pohlaví"
-                value={selectedCandidate.gender}
-              />
-
-              <Info
-                label="Město"
-                value={selectedCandidate.city}
-              />
-
-              <Info
-                label="Telefon"
-                value={selectedCandidate.phone}
-              />
-
-              <Info
-                label="E-mail"
-                value={selectedCandidate.email}
-              />
-
-              <Info
-                label="Role"
-                value={selectedCandidate.role}
-              />
+              <Info label="Věk" value={selectedCandidate.age} />
+              <Info label="Pohlaví" value={selectedCandidate.gender} />
+              <Info label="Město" value={selectedCandidate.city} />
+              <Info label="Telefon" value={selectedCandidate.phone} />
+              <Info label="E-mail" value={selectedCandidate.email} />
+              <Info label="Role" value={selectedCandidate.role} />
 
               <Info
                 label="Výška"
