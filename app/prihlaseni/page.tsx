@@ -17,40 +17,35 @@ export default function ProdukcePrihlaseniPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function login(e: React.FormEvent<HTMLFormElement>) {
+  async function login(e: React.FormEvent) {
     e.preventDefault();
 
     setError("");
     setLoading(true);
 
     try {
-      const result = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+      const { data, error } =
+        await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
 
-      if (result.error) {
-        setError(result.error.message);
+      if (error) {
+        setError(error.message);
         setLoading(false);
         return;
       }
 
-      if (!result.data.user) {
+      if (!data.user) {
         setError("Přihlášení se nepodařilo.");
         setLoading(false);
         return;
       }
 
-      router.push("/produkce");
+      window.location.href = "/produkce";
     } catch (err) {
       console.error(err);
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Nastala chyba při přihlášení."
-      );
-
+      setError("Nepodařilo se připojit k přihlášení.");
       setLoading(false);
     }
   }
@@ -87,7 +82,9 @@ export default function ProdukcePrihlaseniPage() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) =>
+                setEmail(e.target.value)
+              }
               required
               style={{
                 width: "100%",
@@ -103,7 +100,9 @@ export default function ProdukcePrihlaseniPage() {
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) =>
+                setPassword(e.target.value)
+              }
               required
               style={{
                 width: "100%",
@@ -125,10 +124,12 @@ export default function ProdukcePrihlaseniPage() {
             disabled={loading}
             style={{
               padding: "14px",
-              cursor: loading ? "default" : "pointer",
+              cursor: "pointer",
             }}
           >
-            {loading ? "Přihlašuji..." : "Přihlásit se"}
+            {loading
+              ? "Přihlašuji..."
+              : "Přihlásit se"}
           </button>
         </form>
       </div>
