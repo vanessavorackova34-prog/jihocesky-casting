@@ -14,20 +14,26 @@ type Candidate = {
   first_name: string;
   last_name: string;
   age: number | null;
+  gender: string | null;
   city: string | null;
   role: string | null;
   height_cm: number | null;
   experience: string | null;
   availability: string | null;
   status: string | null;
-  photo_url?: string | null;
-  photos?: string[] | null;
+};
+
+type CandidateWithPhotos = Candidate & {
+  photos: string[];
 };
 
 export default function ProdukcePage() {
   const router = useRouter();
 
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [candidates, setCandidates] = useState<
+    CandidateWithPhotos[]
+  >([]);
+
   const [loading, setLoading] = useState(true);
 
   const [role, setRole] = useState("");
@@ -68,7 +74,43 @@ export default function ProdukcePage() {
       return;
     }
 
-    setCandidates(data || []);
+    const candidatesWithPhotos: CandidateWithPhotos[] = [];
+
+    for (const candidate of data || []) {
+      const { data: files, error: filesError } =
+        await supabase.storage
+          .from("fotky-hercu")
+          .list(candidate.id);
+
+      if (filesError) {
+        console.error(filesError);
+      }
+
+      const photos: string[] = [];
+
+      for (const file of files || []) {
+        if (!file.name) continue;
+
+        const { data: signedUrl } =
+          await supabase.storage
+            .from("fotky-hercu")
+            .createSignedUrl(
+              `${candidate.id}/${file.name}`,
+              60 * 60
+            );
+
+        if (signedUrl?.signedUrl) {
+          photos.push(signedUrl.signedUrl);
+        }
+      }
+
+      candidatesWithPhotos.push({
+        ...candidate,
+        photos,
+      });
+    }
+
+    setCandidates(candidatesWithPhotos);
     setLoading(false);
   }
 
@@ -78,20 +120,44 @@ export default function ProdukcePage() {
   }
 
   const filteredCandidates = candidates.filter((candidate) => {
-    const candidateRole = (candidate.role || "").toLowerCase();
-    const candidateCity = (candidate.city || "").toLowerCase();
+    const candidateRole =
+      (candidate.role || "").toLowerCase();
+
+    const candidateGender =
+      (candidate.gender || "").toLowerCase();
+
+    const candidateCity =
+      (candidate.city || "").toLowerCase();
+
     const fullName =
-      `${candidate.first_name || ""} ${candidate.last_name || ""}`.toLowerCase();
+      `${candidate.first_name || ""} ${candidate.last_name || ""}`
+        .toLowerCase();
 
-    if (role && !candidateRole.includes(role.toLowerCase())) {
+    if (
+      role &&
+      !candidateRole.includes(role.toLowerCase())
+    ) {
       return false;
     }
 
-    if (ageFrom && Number(candidate.age) < Number(ageFrom)) {
+    if (
+      gender &&
+      candidateGender !== gender.toLowerCase()
+    ) {
       return false;
     }
 
-    if (ageTo && Number(candidate.age) > Number(ageTo)) {
+    if (
+      ageFrom &&
+      Number(candidate.age) < Number(ageFrom)
+    ) {
+      return false;
+    }
+
+    if (
+      ageTo &&
+      Number(candidate.age) > Number(ageTo)
+    ) {
       return false;
     }
 
@@ -107,11 +173,6 @@ export default function ProdukcePage() {
       !fullName.includes(search.toLowerCase())
     ) {
       return false;
-    }
-
-    // Pohlaví zatím použijeme až po přidání sloupce gender do Supabase.
-    if (gender) {
-      return true;
     }
 
     return true;
@@ -170,64 +231,110 @@ export default function ProdukcePage() {
         >
           <select
             value={role}
-            onChange={(e) => setRole(e.target.value)}
+            onChange={(e) =>
+              setRole(e.target.value)
+            }
           >
-            <option value="">Herec / Komparz</option>
-            <option value="herec">Herec</option>
-            <option value="komparz">Komparz</option>
+            <option value="">
+              Všechny kategorie
+            </option>
+
+            <option value="herec">
+              Herec / herečka
+            </option>
+
+            <option value="komparz">
+              Komparz
+            </option>
+
+            <option value="statista">
+              Statista
+            </option>
+
+            <option value="model">
+              Model / modelka
+            </option>
+
+            <option value="kaskadér">
+              Kaskadér
+            </option>
           </select>
 
           <select
             value={gender}
-            onChange={(e) => setGender(e.target.value)}
+            onChange={(e) =>
+              setGender(e.target.value)
+            }
           >
-            <option value="">Všechna pohlaví</option>
-            <option value="male">Muži / Kluci</option>
-            <option value="female">Ženy / Dívky</option>
+            <option value="">
+              Všechna pohlaví
+            </option>
+
+            <option value="male">
+              Muži / kluci
+            </option>
+
+            <option value="female">
+              Ženy / dívky
+            </option>
           </select>
 
           <input
             type="number"
             placeholder="Věk od"
             value={ageFrom}
-            onChange={(e) => setAgeFrom(e.target.value)}
+            onChange={(e) =>
+              setAgeFrom(e.target.value)
+            }
           />
 
           <input
             type="number"
             placeholder="Věk do"
             value={ageTo}
-            onChange={(e) => setAgeTo(e.target.value)}
+            onChange={(e) =>
+              setAgeTo(e.target.value)
+            }
           />
 
           <input
             placeholder="Město"
             value={city}
-            onChange={(e) => setCity(e.target.value)}
+            onChange={(e) =>
+              setCity(e.target.value)
+            }
           />
 
           <input
             placeholder="Hledat podle jména"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) =>
+              setSearch(e.target.value)
+            }
           />
         </div>
 
         <p style={{ marginBottom: 0 }}>
-          Nalezeno: <strong>{filteredCandidates.length}</strong>
+          Nalezeno:{" "}
+          <strong>
+            {filteredCandidates.length}
+          </strong>
         </p>
       </section>
 
       {loading ? (
         <p>Načítám databázi...</p>
       ) : filteredCandidates.length === 0 ? (
-        <p>Pro zadané požadavky nebyl nalezen žádný profil.</p>
+        <p>
+          Pro zadané požadavky nebyl nalezen žádný
+          schválený profil.
+        </p>
       ) : (
         <div
           style={{
             display: "grid",
             gridTemplateColumns:
-              "repeat(auto-fill, minmax(240px, 1fr))",
+              "repeat(auto-fill, minmax(260px, 1fr))",
             gap: "20px",
           }}
         >
@@ -236,31 +343,73 @@ export default function ProdukcePage() {
               key={candidate.id}
               style={{
                 border: "1px solid #ddd",
-                borderRadius: "12px",
-                padding: "18px",
+                borderRadius: "16px",
+                padding: "16px",
+                overflow: "hidden",
               }}
             >
-              {candidate.photo_url && (
-                <img
-                  src={candidate.photo_url}
-                  alt={`${candidate.first_name} ${candidate.last_name}`}
-                  style={{
-                    width: "100%",
-                    height: "280px",
-                    objectFit: "cover",
-                    borderRadius: "8px",
-                    marginBottom: "15px",
-                  }}
-                />
+              {candidate.photos.length > 0 && (
+                <div>
+                  <img
+                    src={candidate.photos[0]}
+                    alt={`${candidate.first_name} ${candidate.last_name}`}
+                    style={{
+                      width: "100%",
+                      height: "300px",
+                      objectFit: "cover",
+                      borderRadius: "10px",
+                      display: "block",
+                    }}
+                  />
+
+                  {candidate.photos.length > 1 && (
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "6px",
+                        marginTop: "8px",
+                        overflowX: "auto",
+                      }}
+                    >
+                      {candidate.photos
+                        .slice(1)
+                        .map((photo, index) => (
+                          <img
+                            key={photo}
+                            src={photo}
+                            alt={`Fotografie ${
+                              index + 2
+                            }`}
+                            style={{
+                              width: "60px",
+                              height: "60px",
+                              objectFit: "cover",
+                              borderRadius: "6px",
+                            }}
+                          />
+                        ))}
+                    </div>
+                  )}
+                </div>
               )}
 
               <h2>
-                {candidate.first_name} {candidate.last_name}
+                {candidate.first_name}{" "}
+                {candidate.last_name}
               </h2>
 
               <p>
                 <strong>Věk:</strong>{" "}
                 {candidate.age ?? "Neuvedeno"}
+              </p>
+
+              <p>
+                <strong>Pohlaví:</strong>{" "}
+                {candidate.gender === "male"
+                  ? "Muž / chlapec"
+                  : candidate.gender === "female"
+                  ? "Žena / dívka"
+                  : "Neuvedeno"}
               </p>
 
               <p>
