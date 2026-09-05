@@ -59,6 +59,7 @@ export default function Home() {
               Registrovat profil
             </Link>
           </div>
+         </div>
         </section>
 
         <section className="stats">
