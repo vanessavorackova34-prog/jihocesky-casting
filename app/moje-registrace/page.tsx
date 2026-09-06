@@ -6,11 +6,38 @@ import Link from "next/link";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 
+const MAX_PHOTOS = 5;
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+function safeFileName(name: string) {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]/g, "-")
+    .replace(/-+/g, "-");
+}
+
 export default function MyRegistration() {
   const [token, setToken] = useState("");
   const [candidate, setCandidate] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  const [form, setForm] = useState({
+    first_name: "",
+    last_name: "",
+    age: "",
+    gender: "",
+    city: "",
+    phone: "",
+    email: "",
+    role: "",
+    height_cm: "",
+    experience: "",
+    availability: "",
+  });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -27,9 +54,7 @@ export default function MyRegistration() {
     async function loadCandidate() {
       try {
         const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/candidates?edit_token=eq.${encodeURIComponent(
-            editToken
-          )}&select=*`,
+          `${SUPABASE_URL}/rest/v1/candidates?edit_token=eq.${encodeURIComponent(editToken)}&select=*`,
           {
             headers: {
               apikey: SUPABASE_KEY,
@@ -51,12 +76,30 @@ export default function MyRegistration() {
           return;
         }
 
-        setCandidate(data[0]);
+        const item = data[0];
+
+        setCandidate(item);
+
+        setForm({
+          first_name: item.first_name || "",
+          last_name: item.last_name || "",
+          age: item.age ? String(item.age) : "",
+          gender: item.gender || "",
+          city: item.city || "",
+          phone: item.phone || "",
+          email: item.email || "",
+          role: item.role || "",
+          height_cm:
+            item.height_cm !== null &&
+            item.height_cm !== undefined
+              ? String(item.height_cm)
+              : "",
+          experience: item.experience || "",
+          availability: item.availability || "",
+        });
       } catch (err) {
         console.error(err);
-        setError(
-          "Registraci se nepodařilo načíst."
-        );
+        setError("Registraci se nepodařilo načíst.");
       } finally {
         setLoading(false);
       }
@@ -64,6 +107,148 @@ export default function MyRegistration() {
 
     loadCandidate();
   }, []);
+
+  function change(
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  }
+
+  async function save() {
+    setError("");
+    setMessage("");
+    setSaving(true);
+
+    try {
+      const payload = {
+        first_name: form.first_name,
+        last_name: form.last_name,
+        age: form.age ? Number(form.age) : null,
+        gender: form.gender,
+        city: form.city,
+        phone: form.phone,
+        email: form.email,
+        role: form.role,
+        height_cm: form.height_cm
+          ? Number(form.height_cm)
+          : null,
+        experience: form.experience,
+        availability: form.availability,
+      };
+
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/candidates?edit_token=eq.${encodeURIComponent(token)}`,
+        {
+          method: "PATCH",
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+            "Content-Type": "application/json",
+            Prefer: "return=representation",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      const data = await response.json();
+
+      if (data.length) {
+        setCandidate(data[0]);
+      }
+
+      setMessage("Změny byly úspěšně uloženy.");
+    } catch (err) {
+      console.error(err);
+      setError(
+        "Změny se nepodařilo uložit. Zkus to prosím znovu."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function uploadPhotos(
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const files = Array.from(e.target.files || []);
+
+    if (!files.length || !candidate) {
+      return;
+    }
+
+    setError("");
+    setMessage("");
+
+    if (files.length > MAX_PHOTOS) {
+      setError(
+        "Najednou můžeš vybrat maximálně 5 fotografií."
+      );
+      return;
+    }
+
+    const invalid = files.find(
+      (file) =>
+        !file.type.startsWith("image/") ||
+        file.size > MAX_FILE_SIZE
+    );
+
+    if (invalid) {
+      setError(
+        "Fotografie musí být obrázky a každá může mít maximálně 10 MB."
+      );
+      return;
+    }
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        const ext = file.name.includes(".")
+          ? file.name.split(".").pop()
+          : "jpg";
+
+        const base =
+          safeFileName(
+            file.name.replace(/\.[^.]+$/, "")
+          ) || `foto-${i + 1}`;
+
+        const path = `${candidate.id}/${Date.now()}-${i + 1}-${base}.${ext}`;
+
+        const response = await fetch(
+          `${SUPABASE_URL}/storage/v1/object/fotky-hercu/${path}`,
+          {
+            method: "POST",
+            headers: {
+              apikey: SUPABASE_KEY,
+              Authorization: `Bearer ${SUPABASE_KEY}`,
+              "Content-Type": file.type,
+            },
+            body: file,
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+      }
+
+      setMessage("Nové fotografie byly úspěšně nahrány.");
+    } catch (err) {
+      console.error(err);
+      setError("Fotografie se nepodařilo nahrát.");
+    }
+
+    e.target.value = "";
+  }
 
   if (loading) {
     return (
@@ -81,7 +266,7 @@ export default function MyRegistration() {
     );
   }
 
-  if (error) {
+  if (error && !candidate) {
     return (
       <>
         <header className="top">
@@ -138,163 +323,183 @@ export default function MyRegistration() {
           </div>
 
           <h1>
-            {candidate.first_name}{" "}
-            {candidate.last_name}
+            {candidate.first_name} {candidate.last_name}
           </h1>
 
           <p className="muted">
-            Tady uvidíš údaje své registrace.
+            Zde můžeš upravit údaje své registrace.
           </p>
+
+          {message && (
+            <div className="success">
+              {message}
+            </div>
+          )}
+
+          {error && (
+            <div className="error">
+              {error}
+            </div>
+          )}
 
           <div className="grid">
             <div className="field">
-              <label>Jméno</label>
+              <label>Jméno *</label>
               <input
-                value={candidate.first_name || ""}
-                readOnly
+                name="first_name"
+                value={form.first_name}
+                onChange={change}
+                required
               />
             </div>
 
             <div className="field">
-              <label>Příjmení</label>
+              <label>Příjmení *</label>
               <input
-                value={candidate.last_name || ""}
-                readOnly
+                name="last_name"
+                value={form.last_name}
+                onChange={change}
+                required
               />
             </div>
 
             <div className="field">
-              <label>Věk</label>
+              <label>Věk *</label>
               <input
-                value={candidate.age || ""}
-                readOnly
+                name="age"
+                type="number"
+                min="1"
+                max="100"
+                value={form.age}
+                onChange={change}
+                required
               />
             </div>
 
             <div className="field">
-              <label>Pohlaví</label>
-              <input
-                value={
-                  candidate.gender === "male"
-                    ? "Muž / chlapec"
-                    : candidate.gender === "female"
-                    ? "Žena / dívka"
-                    : candidate.gender || ""
-                }
-                readOnly
-              />
+              <label>Pohlaví *</label>
+              <select
+                name="gender"
+                value={form.gender}
+                onChange={change}
+                required
+              >
+                <option value="">Vyberte</option>
+                <option value="male">
+                  Muž / chlapec
+                </option>
+                <option value="female">
+                  Žena / dívka
+                </option>
+              </select>
             </div>
 
             <div className="field">
               <label>Město</label>
               <input
-                value={candidate.city || ""}
-                readOnly
+                name="city"
+                value={form.city}
+                onChange={change}
               />
             </div>
 
             <div className="field">
               <label>Telefon</label>
               <input
-                value={candidate.phone || ""}
-                readOnly
+                name="phone"
+                value={form.phone}
+                onChange={change}
               />
             </div>
 
             <div className="field">
               <label>E-mail</label>
               <input
-                value={candidate.email || ""}
-                readOnly
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={change}
               />
             </div>
 
             <div className="field">
-              <label>Role / typ</label>
-              <input
-                value={candidate.role || ""}
-                readOnly
-              />
+              <label>Role / typ *</label>
+              <select
+                name="role"
+                value={form.role}
+                onChange={change}
+              >
+                <option>Herec / herečka</option>
+                <option>Komparz</option>
+                <option>Statista</option>
+                <option>Model / modelka</option>
+                <option>Kaskadér</option>
+                <option>Filmový štáb</option>
+                <option>Jiné</option>
+              </select>
             </div>
 
             <div className="field">
               <label>Výška (cm)</label>
               <input
-                value={candidate.height_cm || ""}
-                readOnly
+                name="height_cm"
+                type="number"
+                value={form.height_cm}
+                onChange={change}
               />
             </div>
 
             <div className="field full">
               <label>Zkušenosti</label>
-
               <textarea
-                value={candidate.experience || ""}
-                readOnly
+                name="experience"
+                value={form.experience}
+                onChange={change}
               />
             </div>
 
             <div className="field full">
-              <label>
-                Dostupnost / poznámka
-              </label>
-
+              <label>Dostupnost / poznámka</label>
               <textarea
-                value={candidate.availability || ""}
-                readOnly
+                name="availability"
+                value={form.availability}
+                onChange={change}
               />
             </div>
-          </div>
 
-          <div
-            style={{
-              marginTop: 30,
-              padding: 20,
-              border: "1px solid #333",
-              borderRadius: 12,
-            }}
-          >
-            <strong>Status registrace:</strong>
+            <div className="field full">
+              <label>Přidat nové fotografie</label>
 
-            <div style={{ marginTop: 8 }}>
-              {candidate.status || "Čeká na schválení"}
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={uploadPhotos}
+              />
+
+              <div
+                className="muted"
+                style={{
+                  fontSize: 12,
+                  marginTop: 6,
+                }}
+              >
+                Maximálně 5 fotografií, každá do 10 MB.
+              </div>
             </div>
           </div>
 
-          <div
-            style={{
-              marginTop: 25,
-              padding: 20,
-              border: "1px solid #333",
-              borderRadius: 12,
-            }}
+          <button
+            className="btn primary"
+            type="button"
+            onClick={save}
+            disabled={saving}
+            style={{ marginTop: 20 }}
           >
-            <strong>Fotografie</strong>
-
-            <p className="muted">
-              Fotografie jsou uložené u tvé registrace.
-              Možnost jejich úpravy doplníme v dalším kroku.
-            </p>
-          </div>
-
-          <div
-            style={{
-              marginTop: 30,
-              textAlign: "center",
-            }}
-          >
-            <button
-              className="btn primary"
-              type="button"
-              onClick={() =>
-                alert(
-                  "Úprava registrace bude doplněna v dalším kroku."
-                )
-              }
-            >
-              Upravit registraci
-            </button>
-          </div>
+            {saving
+              ? "Ukládám změny..."
+              : "Uložit změny"}
+          </button>
         </div>
       </main>
     </>
