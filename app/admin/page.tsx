@@ -257,25 +257,35 @@ export default function AdminPage() {
   function matchesGender(candidate: Candidate) {
     if (genderFilter === "Všichni") return true;
 
-    const gender = (candidate.gender || "").toLowerCase();
+    const gender = (candidate.gender || "")
+      .trim()
+      .toLowerCase();
 
     if (genderFilter === "Ženy") {
-      return (
-        gender.includes("žena") ||
-        gender.includes("ženy") ||
-        gender.includes("female")
-      );
+      return gender === "female";
     }
 
     if (genderFilter === "Muži") {
-      return (
-        gender.includes("muž") ||
-        gender.includes("muzi") ||
-        gender.includes("male")
-      );
+      return gender === "male";
     }
 
     return true;
+  }
+
+  function getGenderLabel(gender: string | null) {
+    const value = (gender || "")
+      .trim()
+      .toLowerCase();
+
+    if (value === "female") {
+      return "Žena / dívka";
+    }
+
+    if (value === "male") {
+      return "Muž / chlapec";
+    }
+
+    return gender || "Neuvedeno";
   }
 
   function matchesAge(candidate: Candidate) {
@@ -840,7 +850,9 @@ export default function AdminPage() {
 
                 <Info
                   label="Pohlaví"
-                  value={selectedCandidate.gender}
+                  value={getGenderLabel(
+                    selectedCandidate.gender
+                  )}
                 />
 
                 <Info
