@@ -3,12 +3,17 @@
 import { useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { useRouter } from "next/navigation";
+import {
+  regions,
+  getCitiesForRegion,
+} from "../../../lib/locations";
 
 type Candidate = {
   id: string;
   first_name?: string | null;
   last_name?: string | null;
   age?: number | null;
+  kraj?: string | null;
   city?: string | null;
   phone?: string | null;
   email?: string | null;
@@ -31,7 +36,8 @@ function getSupabase() {
 export default function ProductionDashboard() {
   const router = useRouter();
 
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [candidates, setCandidates] =
+    useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -39,12 +45,16 @@ export default function ProductionDashboard() {
   const [ageFrom, setAgeFrom] = useState("");
   const [ageTo, setAgeTo] = useState("");
   const [gender, setGender] = useState("");
+
+  const [region, setRegion] = useState("");
   const [city, setCity] = useState("");
+
   const [role, setRole] = useState("");
   const [heightFrom, setHeightFrom] = useState("");
   const [heightTo, setHeightTo] = useState("");
   const [experience, setExperience] = useState("");
-  const [availability, setAvailability] = useState("");
+  const [availability, setAvailability] =
+    useState("");
   const [status, setStatus] = useState("");
 
   const [selectedCandidate, setSelectedCandidate] =
@@ -77,7 +87,9 @@ export default function ProductionDashboard() {
 
     if (error) {
       console.error(error);
-      setError("Nepodařilo se načíst uchazeče.");
+      setError(
+        "Nepodařilo se načíst uchazeče."
+      );
       setLoading(false);
       return;
     }
@@ -86,15 +98,18 @@ export default function ProductionDashboard() {
     setLoading(false);
   }
 
-  async function openCandidate(candidate: Candidate) {
+  async function openCandidate(
+    candidate: Candidate
+  ) {
     const supabase = getSupabase();
 
     setSelectedCandidate(candidate);
     setPhotos([]);
 
-    const { data, error } = await supabase.storage
-      .from("fotky-hercu")
-      .list(candidate.id);
+    const { data, error } =
+      await supabase.storage
+        .from("fotky-hercu")
+        .list(candidate.id);
 
     if (error || !data) {
       return;
@@ -102,7 +117,8 @@ export default function ProductionDashboard() {
 
     const photoUrls = data
       .filter((file) => {
-        const name = file.name.toLowerCase();
+        const name =
+          file.name.toLowerCase();
 
         return (
           name.endsWith(".jpg") ||
@@ -112,11 +128,12 @@ export default function ProductionDashboard() {
         );
       })
       .map((file) => {
-        const { data: publicUrl } = supabase.storage
-          .from("fotky-hercu")
-          .getPublicUrl(
-            `${candidate.id}/${file.name}`
-          );
+        const { data: publicUrl } =
+          supabase.storage
+            .from("fotky-hercu")
+            .getPublicUrl(
+              `${candidate.id}/${file.name}`
+            );
 
         return publicUrl.publicUrl;
       });
@@ -136,6 +153,7 @@ export default function ProductionDashboard() {
     setAgeFrom("");
     setAgeTo("");
     setGender("");
+    setRegion("");
     setCity("");
     setRole("");
     setHeightFrom("");
@@ -145,10 +163,11 @@ export default function ProductionDashboard() {
     setStatus("");
   }
 
-  function getGenderLabel(value: string | null | undefined) {
-    const genderValue = (value || "")
-      .trim()
-      .toLowerCase();
+  function getGenderLabel(
+    value: string | null | undefined
+  ) {
+    const genderValue =
+      (value || "").trim().toLowerCase();
 
     if (genderValue === "female") {
       return "Žena / dívka";
@@ -161,19 +180,17 @@ export default function ProductionDashboard() {
     return value || "Neuvedeno";
   }
 
-  const cities = Array.from(
-    new Set(
-      candidates
-        .map((c) => c.city)
-        .filter((value): value is string => Boolean(value))
-    )
-  ).sort();
+  const cities =
+    getCitiesForRegion(region);
 
   const roles = Array.from(
     new Set(
       candidates
         .map((c) => c.role)
-        .filter((value): value is string => Boolean(value))
+        .filter(
+          (value): value is string =>
+            Boolean(value)
+        )
     )
   ).sort();
 
@@ -181,7 +198,10 @@ export default function ProductionDashboard() {
     new Set(
       candidates
         .map((c) => c.experience)
-        .filter((value): value is string => Boolean(value))
+        .filter(
+          (value): value is string =>
+            Boolean(value)
+        )
     )
   ).sort();
 
@@ -189,7 +209,10 @@ export default function ProductionDashboard() {
     new Set(
       candidates
         .map((c) => c.availability)
-        .filter((value): value is string => Boolean(value))
+        .filter(
+          (value): value is string =>
+            Boolean(value)
+        )
     )
   ).sort();
 
@@ -197,100 +220,116 @@ export default function ProductionDashboard() {
     new Set(
       candidates
         .map((c) => c.status)
-        .filter((value): value is string => Boolean(value))
+        .filter(
+          (value): value is string =>
+            Boolean(value)
+        )
     )
   ).sort();
 
-  const filteredCandidates = candidates.filter((candidate) => {
-    const text = search.toLowerCase().trim();
+  const filteredCandidates =
+    candidates.filter((candidate) => {
+      const text =
+        search.toLowerCase().trim();
 
-    const name =
-      `${candidate.first_name || ""} ${candidate.last_name || ""}`.toLowerCase();
+      const name =
+        `${candidate.first_name || ""} ${candidate.last_name || ""}`.toLowerCase();
 
-    const matchesSearch =
-      !text ||
-      name.includes(text) ||
-      (candidate.email || "")
-        .toLowerCase()
-        .includes(text) ||
-      (candidate.city || "")
-        .toLowerCase()
-        .includes(text) ||
-      (candidate.role || "")
-        .toLowerCase()
-        .includes(text);
+      const matchesSearch =
+        !text ||
+        name.includes(text) ||
+        (candidate.email || "")
+          .toLowerCase()
+          .includes(text) ||
+        (candidate.city || "")
+          .toLowerCase()
+          .includes(text) ||
+        (candidate.kraj || "")
+          .toLowerCase()
+          .includes(text) ||
+        (candidate.role || "")
+          .toLowerCase()
+          .includes(text);
 
-    const age = Number(candidate.age);
+      const age = Number(candidate.age);
 
-    const matchesAgeFrom =
-      !ageFrom ||
-      (!Number.isNaN(age) &&
-        age >= Number(ageFrom));
+      const matchesAgeFrom =
+        !ageFrom ||
+        (!Number.isNaN(age) &&
+          age >= Number(ageFrom));
 
-    const matchesAgeTo =
-      !ageTo ||
-      (!Number.isNaN(age) &&
-        age <= Number(ageTo));
+      const matchesAgeTo =
+        !ageTo ||
+        (!Number.isNaN(age) &&
+          age <= Number(ageTo));
 
-    const candidateGender = (candidate.gender || "")
-      .trim()
-      .toLowerCase();
+      const candidateGender =
+        (candidate.gender || "")
+          .trim()
+          .toLowerCase();
 
-    const selectedGender = gender
-      .trim()
-      .toLowerCase();
+      const selectedGender =
+        gender.trim().toLowerCase();
 
-    const matchesGender =
-      !gender ||
-      candidateGender === selectedGender;
+      const matchesGender =
+        !gender ||
+        candidateGender === selectedGender;
 
-    const matchesCity =
-      !city || candidate.city === city;
+      const matchesRegion =
+        !region ||
+        candidate.kraj === region;
 
-    const matchesRole =
-      !role || candidate.role === role;
+      const matchesCity =
+        !city ||
+        candidate.city === city;
 
-    const height =
-      candidate.height_cm ??
-      candidate.height_centimetres ??
-      null;
+      const matchesRole =
+        !role ||
+        candidate.role === role;
 
-    const matchesHeightFrom =
-      !heightFrom ||
-      (height !== null &&
-        height >= Number(heightFrom));
+      const height =
+        candidate.height_cm ??
+        candidate.height_centimetres ??
+        null;
 
-    const matchesHeightTo =
-      !heightTo ||
-      (height !== null &&
-        height <= Number(heightTo));
+      const matchesHeightFrom =
+        !heightFrom ||
+        (height !== null &&
+          height >= Number(heightFrom));
 
-    const matchesExperience =
-      !experience ||
-      candidate.experience === experience;
+      const matchesHeightTo =
+        !heightTo ||
+        (height !== null &&
+          height <= Number(heightTo));
 
-    const matchesAvailability =
-      !availability ||
-      candidate.availability === availability;
+      const matchesExperience =
+        !experience ||
+        candidate.experience === experience;
 
-    const matchesStatus =
-      !status ||
-      candidate.status === status;
+      const matchesAvailability =
+        !availability ||
+        candidate.availability ===
+          availability;
 
-    return (
-      matchesSearch &&
-      matchesAgeFrom &&
-      matchesAgeTo &&
-      matchesGender &&
-      matchesCity &&
-      matchesRole &&
-      matchesHeightFrom &&
-      matchesHeightTo &&
-      matchesExperience &&
-      matchesAvailability &&
-      matchesStatus
-    );
-  });
+      const matchesStatus =
+        !status ||
+        candidate.status === status;
+
+      return (
+        matchesSearch &&
+        matchesAgeFrom &&
+        matchesAgeTo &&
+        matchesGender &&
+        matchesRegion &&
+        matchesCity &&
+        matchesRole &&
+        matchesHeightFrom &&
+        matchesHeightTo &&
+        matchesExperience &&
+        matchesAvailability &&
+        matchesStatus
+      );
+    });
 
   return (
     <main
@@ -436,14 +475,39 @@ export default function ProductionDashboard() {
             </select>
 
             <select
+              value={region}
+              onChange={(e) => {
+                setRegion(e.target.value);
+                setCity("");
+              }}
+              style={inputStyle}
+            >
+              <option value="">
+                Kraj
+              </option>
+
+              {regions.map((item) => (
+                <option
+                  key={item}
+                  value={item}
+                >
+                  {item}
+                </option>
+              ))}
+            </select>
+
+            <select
               value={city}
               onChange={(e) =>
                 setCity(e.target.value)
               }
+              disabled={!region}
               style={inputStyle}
             >
               <option value="">
-                Město
+                {region
+                  ? "Všechna města"
+                  : "Nejdříve vyber kraj"}
               </option>
 
               {cities.map((item) => (
@@ -601,7 +665,8 @@ export default function ProductionDashboard() {
           >
             Načítám uchazeče...
           </div>
-        ) : filteredCandidates.length === 0 ? (
+        ) : filteredCandidates.length ===
+          0 ? (
           <div
             style={{
               textAlign: "center",
@@ -609,7 +674,8 @@ export default function ProductionDashboard() {
               color: "#aaa",
             }}
           >
-            Žádní uchazeči neodpovídají filtrům.
+            Žádní uchazeči neodpovídají
+            filtrům.
           </div>
         ) : (
           <div
@@ -670,7 +736,8 @@ export default function ProductionDashboard() {
             <div
               style={{
                 display: "flex",
-                justifyContent: "space-between",
+                justifyContent:
+                  "space-between",
                 alignItems: "center",
               }}
             >
@@ -754,6 +821,11 @@ export default function ProductionDashboard() {
               />
 
               <Info
+                label="Kraj"
+                value={selectedCandidate.kraj}
+              />
+
+              <Info
                 label="Město"
                 value={selectedCandidate.city}
               />
@@ -777,10 +849,12 @@ export default function ProductionDashboard() {
                 label="Výška"
                 value={
                   selectedCandidate.height_cm ??
-                  selectedCandidate.height_centimetres
+                  selectedCandidate
+                    .height_centimetres
                     ? `${
                         selectedCandidate.height_cm ??
-                        selectedCandidate.height_centimetres
+                        selectedCandidate
+                          .height_centimetres
                       } cm`
                     : ""
                 }
@@ -788,17 +862,23 @@ export default function ProductionDashboard() {
 
               <Info
                 label="Zkušenosti"
-                value={selectedCandidate.experience}
+                value={
+                  selectedCandidate.experience
+                }
               />
 
               <Info
                 label="Dostupnost"
-                value={selectedCandidate.availability}
+                value={
+                  selectedCandidate.availability
+                }
               />
 
               <Info
                 label="Status"
-                value={selectedCandidate.status}
+                value={
+                  selectedCandidate.status
+                }
               />
             </div>
           </div>
@@ -824,14 +904,16 @@ function CandidateCard({
   async function loadPhoto() {
     const supabase = getSupabase();
 
-    const { data, error } = await supabase.storage
-      .from("fotky-hercu")
-      .list(candidate.id);
+    const { data, error } =
+      await supabase.storage
+        .from("fotky-hercu")
+        .list(candidate.id);
 
     if (error || !data) return;
 
     const file = data.find((item) => {
-      const name = item.name.toLowerCase();
+      const name =
+        item.name.toLowerCase();
 
       return (
         name.endsWith(".jpg") ||
@@ -907,6 +989,10 @@ function CandidateCard({
         </p>
 
         <p style={cardText}>
+          Kraj: {candidate.kraj || "-"}
+        </p>
+
+        <p style={cardText}>
           Město: {candidate.city || "-"}
         </p>
 
@@ -930,9 +1016,8 @@ function CandidateCard({
 function getGenderLabel(
   value: string | null | undefined
 ) {
-  const genderValue = (value || "")
-    .trim()
-    .toLowerCase();
+  const genderValue =
+    (value || "").trim().toLowerCase();
 
   if (genderValue === "female") {
     return "Žena / dívka";
