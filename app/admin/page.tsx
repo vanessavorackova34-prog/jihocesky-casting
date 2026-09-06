@@ -3,12 +3,17 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
+import {
+  regions,
+  getCitiesForRegion,
+} from "../../lib/locations";
 
 type Candidate = {
   id: string;
   first_name: string;
   last_name: string;
   age: number;
+  kraj: string | null;
   city: string | null;
   phone: string | null;
   email: string | null;
@@ -35,20 +40,25 @@ export default function AdminPage() {
   const [roleFilter, setRoleFilter] = useState("Všichni");
   const [genderFilter, setGenderFilter] = useState("Všichni");
   const [ageFilter, setAgeFilter] = useState("Všichni");
-  const [cityFilter, setCityFilter] =
-    useState("Všechna města");
+
+  const [regionFilter, setRegionFilter] = useState("");
+  const [cityFilter, setCityFilter] = useState("");
+
   const [search, setSearch] = useState("");
 
   const [selectedCandidate, setSelectedCandidate] =
     useState<Candidate | null>(null);
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
   const key =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   const supabase =
-    url && key ? createBrowserClient(url, key) : null;
+    url && key
+      ? createBrowserClient(url, key)
+      : null;
 
   useEffect(() => {
     loadCandidates();
@@ -85,17 +95,19 @@ export default function AdminPage() {
 
     const withPhotos = await Promise.all(
       (data || []).map(async (candidate) => {
-        const { data: files } = await supabase.storage
-          .from("fotky-hercu")
-          .list(candidate.id);
+        const { data: files } =
+          await supabase.storage
+            .from("fotky-hercu")
+            .list(candidate.id);
 
         const photos =
           files?.map((file) => {
-            const { data } = supabase.storage
-              .from("fotky-hercu")
-              .getPublicUrl(
-                `${candidate.id}/${file.name}`
-              );
+            const { data } =
+              supabase.storage
+                .from("fotky-hercu")
+                .getPublicUrl(
+                  `${candidate.id}/${file.name}`
+                );
 
             return data.publicUrl;
           }) || [];
@@ -189,10 +201,11 @@ export default function AdminPage() {
       }
     }
 
-    const { error: deleteError } = await supabase
-      .from("candidates")
-      .delete()
-      .eq("id", id);
+    const { error: deleteError } =
+      await supabase
+        .from("candidates")
+        .delete()
+        .eq("id", id);
 
     if (deleteError) {
       alert(
@@ -203,7 +216,9 @@ export default function AdminPage() {
     }
 
     setCandidates((current) =>
-      current.filter((candidate) => candidate.id !== id)
+      current.filter(
+        (candidate) => candidate.id !== id
+      )
     );
 
     setSelectedCandidate(null);
@@ -272,7 +287,9 @@ export default function AdminPage() {
     return true;
   }
 
-  function getGenderLabel(gender: string | null) {
+  function getGenderLabel(
+    gender: string | null
+  ) {
     const value = (gender || "")
       .trim()
       .toLowerCase();
@@ -322,32 +339,36 @@ export default function AdminPage() {
     setRoleFilter("Všichni");
     setGenderFilter("Všichni");
     setAgeFilter("Všichni");
-    setCityFilter("Všechna města");
+    setRegionFilter("");
+    setCityFilter("");
     setSearch("");
   }
 
-  const cities = Array.from(
-    new Set(
-      candidates
-        .map((candidate) => candidate.city)
-        .filter(
-          (city): city is string =>
-            Boolean(city)
-        )
-    )
-  ).sort();
+  const cities =
+    getCitiesForRegion(regionFilter);
 
   const visibleCandidates = candidates
     .filter(
       (candidate) =>
         (candidate.status || "pending") === filter
     )
-    .filter((candidate) => matchesRole(candidate))
-    .filter((candidate) => matchesGender(candidate))
-    .filter((candidate) => matchesAge(candidate))
+    .filter((candidate) =>
+      matchesRole(candidate)
+    )
+    .filter((candidate) =>
+      matchesGender(candidate)
+    )
+    .filter((candidate) =>
+      matchesAge(candidate)
+    )
     .filter(
       (candidate) =>
-        cityFilter === "Všechna města" ||
+        !regionFilter ||
+        candidate.kraj === regionFilter
+    )
+    .filter(
+      (candidate) =>
+        !cityFilter ||
         candidate.city === cityFilter
     )
     .filter((candidate) => {
@@ -364,6 +385,9 @@ export default function AdminPage() {
           .toLowerCase()
           .includes(text) ||
         (candidate.city || "")
+          .toLowerCase()
+          .includes(text) ||
+        (candidate.kraj || "")
           .toLowerCase()
           .includes(text)
       );
@@ -451,21 +475,27 @@ export default function AdminPage() {
         >
           <button
             onClick={() => setFilter("pending")}
-            style={filterButton(filter === "pending")}
+            style={filterButton(
+              filter === "pending"
+            )}
           >
             ⏳ Čekající
           </button>
 
           <button
             onClick={() => setFilter("approved")}
-            style={filterButton(filter === "approved")}
+            style={filterButton(
+              filter === "approved"
+            )}
           >
             ✅ Schválené
           </button>
 
           <button
             onClick={() => setFilter("rejected")}
-            style={filterButton(filter === "rejected")}
+            style={filterButton(
+              filter === "rejected"
+            )}
           >
             ❌ Zamítnuté
           </button>
@@ -547,16 +577,48 @@ export default function AdminPage() {
             </select>
 
             <select
+              value={regionFilter}
+              onChange={(e) => {
+                setRegionFilter(e.target.value);
+                setCityFilter("");
+              }}
+              style={inputStyle}
+            >
+              <option value="">
+                Všechny kraje
+              </option>
+
+              {regions.map((region) => (
+                <option
+                  key={region}
+                  value={region}
+                >
+                  {region}
+                </option>
+              ))}
+            </select>
+
+            <select
               value={cityFilter}
               onChange={(e) =>
                 setCityFilter(e.target.value)
               }
+              disabled={!regionFilter}
               style={inputStyle}
             >
-              <option>Všechna města</option>
+              <option value="">
+                {regionFilter
+                  ? "Všechna města"
+                  : "Nejdříve vyber kraj"}
+              </option>
 
               {cities.map((city) => (
-                <option key={city}>{city}</option>
+                <option
+                  key={city}
+                  value={city}
+                >
+                  {city}
+                </option>
               ))}
             </select>
 
@@ -679,9 +741,15 @@ export default function AdminPage() {
                   {candidate.age} let
                 </div>
 
+                {candidate.kraj && (
+                  <div style={mutedStyle}>
+                    📍 {candidate.kraj}
+                  </div>
+                )}
+
                 {candidate.city && (
                   <div style={mutedStyle}>
-                    📍 {candidate.city}
+                    🏙️ {candidate.city}
                   </div>
                 )}
 
@@ -829,6 +897,11 @@ export default function AdminPage() {
                 />
 
                 <Info
+                  label="Kraj"
+                  value={selectedCandidate.kraj}
+                />
+
+                <Info
                   label="Město"
                   value={selectedCandidate.city}
                 />
@@ -868,17 +941,23 @@ export default function AdminPage() {
 
                 <Info
                   label="Zkušenosti"
-                  value={selectedCandidate.experience}
+                  value={
+                    selectedCandidate.experience
+                  }
                 />
 
                 <Info
                   label="Dostupnost"
-                  value={selectedCandidate.availability}
+                  value={
+                    selectedCandidate.availability
+                  }
                 />
 
                 <Info
                   label="Stav"
-                  value={selectedCandidate.status}
+                  value={
+                    selectedCandidate.status
+                  }
                 />
               </div>
 
@@ -970,7 +1049,9 @@ const actionButton: React.CSSProperties = {
   cursor: "pointer",
 };
 
-function filterButton(active: boolean): React.CSSProperties {
+function filterButton(
+  active: boolean
+): React.CSSProperties {
   return {
     background: active ? "#fff" : "#111",
     color: active ? "#000" : "#fff",
