@@ -22,6 +22,7 @@ export default function Registration() {
   const [err, setErr] = useState("");
   const [sending, setSending] = useState(false);
   const [myLink, setMyLink] = useState("");
+  const [copied, setCopied] = useState(false);
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -29,6 +30,7 @@ export default function Registration() {
     setMsg("");
     setErr("");
     setMyLink("");
+    setCopied(false);
 
     const form = e.currentTarget;
     const f = new FormData(form);
@@ -39,9 +41,7 @@ export default function Registration() {
     );
 
     if (photos.length < 1 || photos.length > MAX_PHOTOS) {
-      setErr(
-        "Nahraj prosím alespoň jednu a maximálně pět fotografií."
-      );
+      setErr("Nahraj prosím alespoň jednu a maximálně pět fotografií.");
       return;
     }
 
@@ -52,14 +52,7 @@ export default function Registration() {
     );
 
     if (invalid) {
-      setErr(
-        "Fotografie musí být obrázky a každá může mít maximálně 10 MB."
-      );
-      return;
-    }
-
-    if (!SUPABASE_URL || !SUPABASE_KEY) {
-      setErr("Web zatím není připojený k databázi.");
+      setErr("Fotografie musí být obrázky a každá může mít maximálně 10 MB.");
       return;
     }
 
@@ -85,6 +78,7 @@ export default function Registration() {
           : null,
         experience: f.get("experience"),
         availability: f.get("availability"),
+        photo_paths: [],
       };
 
       const response = await fetch(
@@ -105,6 +99,8 @@ export default function Registration() {
         throw new Error(await response.text());
       }
 
+      const uploadedPaths: string[] = [];
+
       for (let i = 0; i < photos.length; i++) {
         const file = photos[i];
 
@@ -117,7 +113,8 @@ export default function Registration() {
             file.name.replace(/\.[^.]+$/, "")
           ) || `foto-${i + 1}`;
 
-        const path = `${candidateId}/${Date.now()}-${i + 1}-${base}.${ext}`;
+        const path =
+          `${candidateId}/${Date.now()}-${i + 1}-${base}.${ext}`;
 
         const uploadResponse = await fetch(
           `${SUPABASE_URL}/storage/v1/object/fotky-hercu/${path}`,
@@ -135,15 +132,30 @@ export default function Registration() {
         if (!uploadResponse.ok) {
           throw new Error(await uploadResponse.text());
         }
+
+        uploadedPaths.push(path);
       }
+
+      await fetch(
+        `${SUPABASE_URL}/rest/v1/candidates?id=eq.${candidateId}`,
+        {
+          method: "PATCH",
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+            "Content-Type": "application/json",
+            Prefer: "return=minimal",
+          },
+          body: JSON.stringify({
+            photo_paths: uploadedPaths,
+          }),
+        }
+      );
 
       const link =
         `${window.location.origin}/moje-registrace?token=${editToken}`;
 
-      setMsg(
-        "Registrace včetně fotografií byla úspěšně odeslána."
-      );
-
+      setMsg("Registrace včetně fotografií byla úspěšně odeslána.");
       setMyLink(link);
 
       form.reset();
@@ -154,6 +166,23 @@ export default function Registration() {
       );
     } finally {
       setSending(false);
+    }
+  }
+
+  async function copyLink() {
+    if (!myLink) return;
+
+    try {
+      await navigator.clipboard.writeText(myLink);
+      setCopied(true);
+
+      setTimeout(() => {
+        setCopied(false);
+      }, 3000);
+    } catch {
+      setErr(
+        "Odkaz se nepodařilo zkopírovat. Podrž odkaz a zkopíruj ho ručně."
+      );
     }
   }
 
@@ -172,7 +201,10 @@ export default function Registration() {
       <main className="section">
         <div
           className="card"
-          style={{ maxWidth: 850, margin: "auto" }}
+          style={{
+            maxWidth: 850,
+            margin: "auto",
+          }}
         >
           <div className="eyebrow">
             REGISTRACE DO CASTINGU
@@ -185,48 +217,15 @@ export default function Registration() {
             zkontrolován pořadatelem.
           </p>
 
-          {msg && <div className="success">{msg}</div>}
-          {err && <div className="error">{err}</div>}
+          {msg && (
+            <div className="success">
+              {msg}
+            </div>
+          )}
 
-          {myLink && (
-            <div
-              className="success"
-              style={{
-                marginTop: 20,
-                padding: 20,
-              }}
-            >
-              <strong>
-                Ulož si odkaz na svou registraci
-              </strong>
-
-              <p>
-                Pomocí tohoto odkazu se později vrátíš ke
-                své registraci a budeš ji moct upravit.
-              </p>
-
-              <a
-                href={myLink}
-                className="btn primary"
-                style={{
-                  display: "inline-block",
-                  marginTop: 10,
-                  textDecoration: "none",
-                }}
-              >
-                Moje registrace
-              </a>
-
-              <p
-                className="muted"
-                style={{
-                  fontSize: 12,
-                  marginTop: 12,
-                }}
-              >
-                Tento odkaz si ulož. Slouží jako přístup
-                k tvé registraci.
-              </p>
+          {err && (
+            <div className="error">
+              {err}
             </div>
           )}
 
@@ -255,15 +254,10 @@ export default function Registration() {
 
               <div className="field">
                 <label>Pohlaví *</label>
-
                 <select name="gender" required>
                   <option value="">Vyberte</option>
-                  <option value="male">
-                    Muž / chlapec
-                  </option>
-                  <option value="female">
-                    Žena / dívka
-                  </option>
+                  <option value="male">Muž / chlapec</option>
+                  <option value="female">Žena / dívka</option>
                 </select>
               </div>
 
@@ -279,15 +273,11 @@ export default function Registration() {
 
               <div className="field">
                 <label>E-mail</label>
-                <input
-                  name="email"
-                  type="email"
-                />
+                <input name="email" type="email" />
               </div>
 
               <div className="field">
                 <label>Role / typ *</label>
-
                 <select name="role">
                   <option>Herec / herečka</option>
                   <option>Komparz</option>
@@ -301,15 +291,11 @@ export default function Registration() {
 
               <div className="field">
                 <label>Výška (cm)</label>
-                <input
-                  name="height_cm"
-                  type="number"
-                />
+                <input name="height_cm" type="number" />
               </div>
 
               <div className="field full">
                 <label>Zkušenosti</label>
-
                 <textarea
                   name="experience"
                   placeholder="Herectví, divadlo, film, reklama, modeling..."
@@ -317,17 +303,12 @@ export default function Registration() {
               </div>
 
               <div className="field full">
-                <label>
-                  Dostupnost / poznámka
-                </label>
-
+                <label>Dostupnost / poznámka</label>
                 <textarea name="availability" />
               </div>
 
               <div className="field full">
-                <label>
-                  Fotografie * (1–5)
-                </label>
+                <label>Fotografie * (1-5)</label>
 
                 <input
                   name="photos"
@@ -344,22 +325,10 @@ export default function Registration() {
                     marginTop: 6,
                   }}
                 >
-                  Nahraj portrét, celou postavu a případně
-                  další aktuální fotografie. Max. 5 fotek,
-                  10 MB každá.
+                  Max. 5 fotografií, 10 MB každá.
                 </div>
               </div>
             </div>
-
-            <p
-              className="muted"
-              style={{ fontSize: 12 }}
-            >
-              Odesláním formuláře souhlasíš se zpracováním
-              údajů a fotografií pro účely castingu. Před
-              ostrým spuštěním doplňte vlastní zásady
-              ochrany osobních údajů.
-            </p>
 
             <button
               className="btn primary"
@@ -370,6 +339,65 @@ export default function Registration() {
                 ? "Odesílám registraci a fotografie..."
                 : "Odeslat registraci"}
             </button>
+
+            {myLink && (
+              <div
+                className="success"
+                style={{
+                  marginTop: 20,
+                  padding: 20,
+                }}
+              >
+                <strong>
+                  Registrace byla úspěšně odeslána
+                </strong>
+
+                <p>
+                  Ulož si tento odkaz. Přes něj se později
+                  vrátíš ke své registraci.
+                </p>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 10,
+                    flexWrap: "wrap",
+                    marginTop: 15,
+                  }}
+                >
+                  <a
+                    href={myLink}
+                    className="btn primary"
+                    style={{
+                      textDecoration: "none",
+                    }}
+                  >
+                    Moje registrace
+                  </a>
+
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={copyLink}
+                  >
+                    {copied
+                      ? "✓ Odkaz zkopírován"
+                      : "📋 Kopírovat odkaz"}
+                  </button>
+                </div>
+
+                <input
+                  value={myLink}
+                  readOnly
+                  onFocus={(e) => e.currentTarget.select()}
+                  style={{
+                    width: "100%",
+                    marginTop: 15,
+                    padding: 10,
+                  }}
+                />
+              </div>
+            )}
           </form>
         </div>
       </main>
