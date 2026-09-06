@@ -21,25 +21,27 @@ export default function Registration() {
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [sending, setSending] = useState(false);
+  const [myLink, setMyLink] = useState("");
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     setMsg("");
     setErr("");
+    setMyLink("");
 
     const form = e.currentTarget;
     const f = new FormData(form);
 
-    const photos = f
-      .getAll("photos")
-      .filter(
-        (item): item is File =>
-          item instanceof File && item.size > 0
-      );
+    const photos = f.getAll("photos").filter(
+      (item): item is File =>
+        item instanceof File && item.size > 0
+    );
 
     if (photos.length < 1 || photos.length > MAX_PHOTOS) {
-      setErr("Nahraj prosím alespoň jednu a maximálně pět fotografií.");
+      setErr(
+        "Nahraj prosím alespoň jednu a maximálně pět fotografií."
+      );
       return;
     }
 
@@ -65,9 +67,11 @@ export default function Registration() {
 
     try {
       const candidateId = crypto.randomUUID();
+      const editToken = crypto.randomUUID();
 
       const payload = {
         id: candidateId,
+        edit_token: editToken,
         first_name: f.get("first_name"),
         last_name: f.get("last_name"),
         age: Number(f.get("age")),
@@ -133,9 +137,14 @@ export default function Registration() {
         }
       }
 
+      const link =
+        `${window.location.origin}/moje-registrace?token=${editToken}`;
+
       setMsg(
-        "Registrace včetně fotografií byla odeslána. Profil nyní čeká na schválení pořadatelem."
+        "Registrace včetně fotografií byla úspěšně odeslána."
       );
+
+      setMyLink(link);
 
       form.reset();
     } catch (error) {
@@ -179,6 +188,48 @@ export default function Registration() {
           {msg && <div className="success">{msg}</div>}
           {err && <div className="error">{err}</div>}
 
+          {myLink && (
+            <div
+              className="success"
+              style={{
+                marginTop: 20,
+                padding: 20,
+              }}
+            >
+              <strong>
+                Ulož si odkaz na svou registraci
+              </strong>
+
+              <p>
+                Pomocí tohoto odkazu se později vrátíš ke
+                své registraci a budeš ji moct upravit.
+              </p>
+
+              <a
+                href={myLink}
+                className="btn primary"
+                style={{
+                  display: "inline-block",
+                  marginTop: 10,
+                  textDecoration: "none",
+                }}
+              >
+                Moje registrace
+              </a>
+
+              <p
+                className="muted"
+                style={{
+                  fontSize: 12,
+                  marginTop: 12,
+                }}
+              >
+                Tento odkaz si ulož. Slouží jako přístup
+                k tvé registraci.
+              </p>
+            </div>
+          )}
+
           <form onSubmit={submit}>
             <div className="grid">
               <div className="field">
@@ -201,14 +252,21 @@ export default function Registration() {
                   required
                 />
               </div>
-<div className="field">
-  <label>Pohlaví *</label>
-  <select name="gender" required>
-    <option value="">Vyberte</option>
-    <option value="male">Muž / chlapec</option>
-    <option value="female">Žena / dívka</option>
-  </select>
-</div>
+
+              <div className="field">
+                <label>Pohlaví *</label>
+
+                <select name="gender" required>
+                  <option value="">Vyberte</option>
+                  <option value="male">
+                    Muž / chlapec
+                  </option>
+                  <option value="female">
+                    Žena / dívka
+                  </option>
+                </select>
+              </div>
+
               <div className="field">
                 <label>Město</label>
                 <input name="city" />
@@ -221,7 +279,10 @@ export default function Registration() {
 
               <div className="field">
                 <label>E-mail</label>
-                <input name="email" type="email" />
+                <input
+                  name="email"
+                  type="email"
+                />
               </div>
 
               <div className="field">
@@ -240,7 +301,10 @@ export default function Registration() {
 
               <div className="field">
                 <label>Výška (cm)</label>
-                <input name="height_cm" type="number" />
+                <input
+                  name="height_cm"
+                  type="number"
+                />
               </div>
 
               <div className="field full">
@@ -248,18 +312,22 @@ export default function Registration() {
 
                 <textarea
                   name="experience"
-                  placeholder="Herectví, divadlo, film, reklama, modeling…"
+                  placeholder="Herectví, divadlo, film, reklama, modeling..."
                 />
               </div>
 
               <div className="field full">
-                <label>Dostupnost / poznámka</label>
+                <label>
+                  Dostupnost / poznámka
+                </label>
 
                 <textarea name="availability" />
               </div>
 
               <div className="field full">
-                <label>Fotografie * (1–5)</label>
+                <label>
+                  Fotografie * (1–5)
+                </label>
 
                 <input
                   name="photos"
@@ -299,7 +367,7 @@ export default function Registration() {
               disabled={sending}
             >
               {sending
-                ? "Odesílám registraci a fotografie…"
+                ? "Odesílám registraci a fotografie..."
                 : "Odeslat registraci"}
             </button>
           </form>
