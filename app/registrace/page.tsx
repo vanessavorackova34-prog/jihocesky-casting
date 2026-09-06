@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { regions, getCitiesForRegion } from "../../lib/locations";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
@@ -24,6 +25,11 @@ export default function Registration() {
   const [myLink, setMyLink] = useState("");
   const [copied, setCopied] = useState(false);
 
+  const [selectedRegion, setSelectedRegion] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+
+  const cities = getCitiesForRegion(selectedRegion);
+
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
@@ -41,7 +47,9 @@ export default function Registration() {
     );
 
     if (photos.length < 1 || photos.length > MAX_PHOTOS) {
-      setErr("Nahraj prosím alespoň jednu a maximálně pět fotografií.");
+      setErr(
+        "Nahraj prosím alespoň jednu a maximálně pět fotografií."
+      );
       return;
     }
 
@@ -52,7 +60,19 @@ export default function Registration() {
     );
 
     if (invalid) {
-      setErr("Fotografie musí být obrázky a každá může mít maximálně 10 MB.");
+      setErr(
+        "Fotografie musí být obrázky a každá může mít maximálně 10 MB."
+      );
+      return;
+    }
+
+    if (!selectedRegion) {
+      setErr("Vyber prosím kraj.");
+      return;
+    }
+
+    if (!selectedCity) {
+      setErr("Vyber prosím město.");
       return;
     }
 
@@ -69,6 +89,7 @@ export default function Registration() {
         last_name: f.get("last_name"),
         age: Number(f.get("age")),
         gender: f.get("gender"),
+        kraj: f.get("kraj"),
         city: f.get("city"),
         phone: f.get("phone"),
         email: f.get("email"),
@@ -155,10 +176,14 @@ export default function Registration() {
       const link =
         `${window.location.origin}/moje-registrace?token=${editToken}`;
 
-      setMsg("Registrace včetně fotografií byla úspěšně odeslána.");
+      setMsg(
+        "Registrace včetně fotografií byla úspěšně odeslána."
+      );
       setMyLink(link);
 
       form.reset();
+      setSelectedRegion("");
+      setSelectedCity("");
     } catch (error) {
       console.error(error);
       setErr(
@@ -262,8 +287,57 @@ export default function Registration() {
               </div>
 
               <div className="field">
-                <label>Město</label>
-                <input name="city" />
+                <label>Kraj *</label>
+
+                <select
+                  name="kraj"
+                  value={selectedRegion}
+                  onChange={(e) => {
+                    setSelectedRegion(e.target.value);
+                    setSelectedCity("");
+                  }}
+                  required
+                >
+                  <option value="">Vyberte kraj</option>
+
+                  {regions.map((region) => (
+                    <option
+                      key={region}
+                      value={region}
+                    >
+                      {region}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="field">
+                <label>Město *</label>
+
+                <select
+                  name="city"
+                  value={selectedCity}
+                  onChange={(e) =>
+                    setSelectedCity(e.target.value)
+                  }
+                  disabled={!selectedRegion}
+                  required
+                >
+                  <option value="">
+                    {selectedRegion
+                      ? "Vyberte město"
+                      : "Nejdříve vyberte kraj"}
+                  </option>
+
+                  {cities.map((city) => (
+                    <option
+                      key={city}
+                      value={city}
+                    >
+                      {city}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="field">
@@ -273,7 +347,10 @@ export default function Registration() {
 
               <div className="field">
                 <label>E-mail</label>
-                <input name="email" type="email" />
+                <input
+                  name="email"
+                  type="email"
+                />
               </div>
 
               <div className="field">
@@ -291,11 +368,15 @@ export default function Registration() {
 
               <div className="field">
                 <label>Výška (cm)</label>
-                <input name="height_cm" type="number" />
+                <input
+                  name="height_cm"
+                  type="number"
+                />
               </div>
 
               <div className="field full">
                 <label>Zkušenosti</label>
+
                 <textarea
                   name="experience"
                   placeholder="Herectví, divadlo, film, reklama, modeling..."
@@ -304,6 +385,7 @@ export default function Registration() {
 
               <div className="field full">
                 <label>Dostupnost / poznámka</label>
+
                 <textarea name="availability" />
               </div>
 
@@ -389,7 +471,9 @@ export default function Registration() {
                 <input
                   value={myLink}
                   readOnly
-                  onFocus={(e) => e.currentTarget.select()}
+                  onFocus={(e) =>
+                    e.currentTarget.select()
+                  }
                   style={{
                     width: "100%",
                     marginTop: 15,
