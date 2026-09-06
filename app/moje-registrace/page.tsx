@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -12,144 +12,92 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 function safeFileName(name: string) {
   return name
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\u0300-\u036f]/g, "-")
     .replace(/[^a-zA-Z0-9._-]/g, "-")
     .replace(/-+/g, "-");
 }
 
-export default function MyRegistration() {
-  const [token, setToken] = useState("");
-  const [candidate, setCandidate] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+export default function Registration() {
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
+  const [sending, setSending] = useState(false);
+  const [myLink, setMyLink] = useState("");
+  const [copied, setCopied] = useState(false);
 
-  const [form, setForm] = useState({
-    first_name: "",
-    last_name: "",
-    age: "",
-    gender: "",
-    city: "",
-    phone: "",
-    email: "",
-    role: "",
-    height_cm: "",
-    experience: "",
-    availability: "",
-  });
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const editToken = params.get("token");
+    setMsg("");
+    setErr("");
+    setMyLink("");
+    setCopied(false);
 
-    if (!editToken) {
-      setError("Chybí odkaz na registraci.");
-      setLoading(false);
+    const form = e.currentTarget;
+    const f = new FormData(form);
+
+    const photos = f.getAll("photos").filter(
+      (item): item is File =>
+        item instanceof File && item.size > 0
+    );
+
+    if (photos.length < 1 || photos.length > MAX_PHOTOS) {
+      setErr(
+        "Nahraj prosím alespoň jednu a maximálně pět fotografií."
+      );
       return;
     }
 
-    setToken(editToken);
+    const invalid = photos.find(
+      (file) =>
+        !file.type.startsWith("image/") ||
+        file.size > MAX_FILE_SIZE
+    );
 
-    async function loadCandidate() {
-      try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/candidates?edit_token=eq.${encodeURIComponent(editToken)}&select=*`,
-          {
-            headers: {
-              apikey: SUPABASE_KEY,
-              Authorization: `Bearer ${SUPABASE_KEY}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(await response.text());
-        }
-
-        const data = await response.json();
-
-        if (!data.length) {
-          setError(
-            "Registrace nebyla nalezena nebo je odkaz neplatný."
-          );
-          return;
-        }
-
-        const item = data[0];
-
-        setCandidate(item);
-
-        setForm({
-          first_name: item.first_name || "",
-          last_name: item.last_name || "",
-          age: item.age ? String(item.age) : "",
-          gender: item.gender || "",
-          city: item.city || "",
-          phone: item.phone || "",
-          email: item.email || "",
-          role: item.role || "",
-          height_cm:
-            item.height_cm !== null &&
-            item.height_cm !== undefined
-              ? String(item.height_cm)
-              : "",
-          experience: item.experience || "",
-          availability: item.availability || "",
-        });
-      } catch (err) {
-        console.error(err);
-        setError("Registraci se nepodařilo načíst.");
-      } finally {
-        setLoading(false);
-      }
+    if (invalid) {
+      setErr(
+        "Fotografie musí být obrázky a každá může mít maximálně 10 MB."
+      );
+      return;
     }
 
-    loadCandidate();
-  }, []);
+    if (!SUPABASE_URL || !SUPABASE_KEY) {
+      setErr("Web zatím není připojený k databázi.");
+      return;
+    }
 
-  function change(
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
-  }
-
-  async function save() {
-    setError("");
-    setMessage("");
-    setSaving(true);
+    setSending(true);
 
     try {
+      const candidateId = crypto.randomUUID();
+      const editToken = crypto.randomUUID();
+
       const payload = {
-        first_name: form.first_name,
-        last_name: form.last_name,
-        age: form.age ? Number(form.age) : null,
-        gender: form.gender,
-        city: form.city,
-        phone: form.phone,
-        email: form.email,
-        role: form.role,
-        height_cm: form.height_cm
-          ? Number(form.height_cm)
+        id: candidateId,
+        edit_token: editToken,
+        first_name: f.get("first_name"),
+        last_name: f.get("last_name"),
+        age: Number(f.get("age")),
+        gender: f.get("gender"),
+        city: f.get("city"),
+        phone: f.get("phone"),
+        email: f.get("email"),
+        role: f.get("role"),
+        height_cm: f.get("height_cm")
+          ? Number(f.get("height_cm"))
           : null,
-        experience: form.experience,
-        availability: form.availability,
+        experience: f.get("experience"),
+        availability: f.get("availability"),
       };
 
       const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/candidates?edit_token=eq.${encodeURIComponent(token)}`,
+        `${SUPABASE_URL}/rest/v1/candidates`,
         {
-          method: "PATCH",
+          method: "POST",
           headers: {
             apikey: SUPABASE_KEY,
             Authorization: `Bearer ${SUPABASE_KEY}`,
             "Content-Type": "application/json",
-            Prefer: "return=representation",
+            Prefer: "return=minimal",
           },
           body: JSON.stringify(payload),
         }
@@ -159,58 +107,8 @@ export default function MyRegistration() {
         throw new Error(await response.text());
       }
 
-      const data = await response.json();
-
-      if (data.length) {
-        setCandidate(data[0]);
-      }
-
-      setMessage("Změny byly úspěšně uloženy.");
-    } catch (err) {
-      console.error(err);
-      setError(
-        "Změny se nepodařilo uložit. Zkus to prosím znovu."
-      );
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function uploadPhotos(
-    e: React.ChangeEvent<HTMLInputElement>
-  ) {
-    const files = Array.from(e.target.files || []);
-
-    if (!files.length || !candidate) {
-      return;
-    }
-
-    setError("");
-    setMessage("");
-
-    if (files.length > MAX_PHOTOS) {
-      setError(
-        "Najednou můžeš vybrat maximálně 5 fotografií."
-      );
-      return;
-    }
-
-    const invalid = files.find(
-      (file) =>
-        !file.type.startsWith("image/") ||
-        file.size > MAX_FILE_SIZE
-    );
-
-    if (invalid) {
-      setError(
-        "Fotografie musí být obrázky a každá může mít maximálně 10 MB."
-      );
-      return;
-    }
-
-    try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+      for (let i = 0; i < photos.length; i++) {
+        const file = photos[i];
 
         const ext = file.name.includes(".")
           ? file.name.split(".").pop()
@@ -221,9 +119,9 @@ export default function MyRegistration() {
             file.name.replace(/\.[^.]+$/, "")
           ) || `foto-${i + 1}`;
 
-        const path = `${candidate.id}/${Date.now()}-${i + 1}-${base}.${ext}`;
+        const path = `${candidateId}/${Date.now()}-${i + 1}-${base}.${ext}`;
 
-        const response = await fetch(
+        const uploadResponse = await fetch(
           `${SUPABASE_URL}/storage/v1/object/fotky-hercu/${path}`,
           {
             method: "POST",
@@ -236,66 +134,46 @@ export default function MyRegistration() {
           }
         );
 
-        if (!response.ok) {
-          throw new Error(await response.text());
+        if (!uploadResponse.ok) {
+          throw new Error(await uploadResponse.text());
         }
       }
 
-      setMessage("Nové fotografie byly úspěšně nahrány.");
-    } catch (err) {
-      console.error(err);
-      setError("Fotografie se nepodařilo nahrát.");
+      const link =
+        `${window.location.origin}/moje-registrace?token=${editToken}`;
+
+      setMsg(
+        "Registrace včetně fotografií byla úspěšně odeslána."
+      );
+
+      setMyLink(link);
+
+      form.reset();
+    } catch (error) {
+      console.error(error);
+      setErr(
+        "Registraci se nepodařilo odeslat. Zkus to prosím znovu."
+      );
+    } finally {
+      setSending(false);
     }
-
-    e.target.value = "";
   }
 
-  if (loading) {
-    return (
-      <main
-        style={{
-          minHeight: "100vh",
-          background: "#000",
-          color: "#fff",
-          padding: 40,
-          textAlign: "center",
-        }}
-      >
-        Načítám registraci...
-      </main>
-    );
-  }
+  async function copyLink() {
+    if (!myLink) return;
 
-  if (error && !candidate) {
-    return (
-      <>
-        <header className="top">
-          <div className="logo">
-            🎬 <span>JIHOČESKÝ CASTING</span>
-          </div>
+    try {
+      await navigator.clipboard.writeText(myLink);
+      setCopied(true);
 
-          <Link className="btn" href="/">
-            Zpět
-          </Link>
-        </header>
-
-        <main className="section">
-          <div
-            className="card"
-            style={{
-              maxWidth: 700,
-              margin: "auto",
-            }}
-          >
-            <h1>Moje registrace</h1>
-
-            <div className="error">
-              {error}
-            </div>
-          </div>
-        </main>
-      </>
-    );
+      setTimeout(() => {
+        setCopied(false);
+      }, 3000);
+    } catch {
+      setErr(
+        "Odkaz se nepodařilo zkopírovat. Podrž odkaz a zkopíruj ho ručně."
+      );
+    }
   }
 
   return (
@@ -319,187 +197,254 @@ export default function MyRegistration() {
           }}
         >
           <div className="eyebrow">
-            MOJE REGISTRACE
+            REGISTRACE DO CASTINGU
           </div>
 
-          <h1>
-            {candidate.first_name} {candidate.last_name}
-          </h1>
+          <h1>Přihlaš svůj profil</h1>
 
           <p className="muted">
-            Zde můžeš upravit údaje své registrace.
+            Vyplň údaje pravdivě. Profil bude nejdříve
+            zkontrolován pořadatelem.
           </p>
 
-          {message && (
+          {msg && (
             <div className="success">
-              {message}
+              {msg}
             </div>
           )}
 
-          {error && (
+          {err && (
             <div className="error">
-              {error}
+              {err}
             </div>
           )}
 
-          <div className="grid">
-            <div className="field">
-              <label>Jméno *</label>
-              <input
-                name="first_name"
-                value={form.first_name}
-                onChange={change}
-                required
-              />
-            </div>
+          {myLink && (
+            <div
+              className="success"
+              style={{
+                marginTop: 20,
+                padding: 20,
+              }}
+            >
+              <strong>
+                Ulož si odkaz na svou registraci
+              </strong>
 
-            <div className="field">
-              <label>Příjmení *</label>
-              <input
-                name="last_name"
-                value={form.last_name}
-                onChange={change}
-                required
-              />
-            </div>
-
-            <div className="field">
-              <label>Věk *</label>
-              <input
-                name="age"
-                type="number"
-                min="1"
-                max="100"
-                value={form.age}
-                onChange={change}
-                required
-              />
-            </div>
-
-            <div className="field">
-              <label>Pohlaví *</label>
-              <select
-                name="gender"
-                value={form.gender}
-                onChange={change}
-                required
-              >
-                <option value="">Vyberte</option>
-                <option value="male">
-                  Muž / chlapec
-                </option>
-                <option value="female">
-                  Žena / dívka
-                </option>
-              </select>
-            </div>
-
-            <div className="field">
-              <label>Město</label>
-              <input
-                name="city"
-                value={form.city}
-                onChange={change}
-              />
-            </div>
-
-            <div className="field">
-              <label>Telefon</label>
-              <input
-                name="phone"
-                value={form.phone}
-                onChange={change}
-              />
-            </div>
-
-            <div className="field">
-              <label>E-mail</label>
-              <input
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={change}
-              />
-            </div>
-
-            <div className="field">
-              <label>Role / typ *</label>
-              <select
-                name="role"
-                value={form.role}
-                onChange={change}
-              >
-                <option>Herec / herečka</option>
-                <option>Komparz</option>
-                <option>Statista</option>
-                <option>Model / modelka</option>
-                <option>Kaskadér</option>
-                <option>Filmový štáb</option>
-                <option>Jiné</option>
-              </select>
-            </div>
-
-            <div className="field">
-              <label>Výška (cm)</label>
-              <input
-                name="height_cm"
-                type="number"
-                value={form.height_cm}
-                onChange={change}
-              />
-            </div>
-
-            <div className="field full">
-              <label>Zkušenosti</label>
-              <textarea
-                name="experience"
-                value={form.experience}
-                onChange={change}
-              />
-            </div>
-
-            <div className="field full">
-              <label>Dostupnost / poznámka</label>
-              <textarea
-                name="availability"
-                value={form.availability}
-                onChange={change}
-              />
-            </div>
-
-            <div className="field full">
-              <label>Přidat nové fotografie</label>
-
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={uploadPhotos}
-              />
+              <p>
+                Pomocí tohoto odkazu se později vrátíš ke
+                své registraci a budeš ji moct upravit.
+              </p>
 
               <div
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  flexWrap: "wrap",
+                  marginTop: 15,
+                }}
+              >
+                <a
+                  href={myLink}
+                  className="btn primary"
+                  style={{
+                    textDecoration: "none",
+                  }}
+                >
+                  Moje registrace
+                </a>
+
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={copyLink}
+                >
+                  {copied
+                    ? "✓ Odkaz zkopírován"
+                    : "📋 Kopírovat odkaz"}
+                </button>
+              </div>
+
+              <p
                 className="muted"
                 style={{
                   fontSize: 12,
-                  marginTop: 6,
+                  marginTop: 12,
+                  wordBreak: "break-all",
                 }}
               >
-                Maximálně 5 fotografií, každá do 10 MB.
+                {myLink}
+              </p>
+
+              <p
+                className="muted"
+                style={{
+                  fontSize: 12,
+                  marginTop: 8,
+                }}
+              >
+                Tento odkaz si dobře ulož. Slouží jako
+                přístup k tvé registraci.
+              </p>
+            </div>
+          )}
+
+          <form onSubmit={submit}>
+            <div className="grid">
+              <div className="field">
+                <label>Jméno *</label>
+                <input
+                  name="first_name"
+                  required
+                />
+              </div>
+
+              <div className="field">
+                <label>Příjmení *</label>
+                <input
+                  name="last_name"
+                  required
+                />
+              </div>
+
+              <div className="field">
+                <label>Věk *</label>
+                <input
+                  name="age"
+                  type="number"
+                  min="1"
+                  max="100"
+                  required
+                />
+              </div>
+
+              <div className="field">
+                <label>Pohlaví *</label>
+
+                <select
+                  name="gender"
+                  required
+                >
+                  <option value="">
+                    Vyberte
+                  </option>
+                  <option value="male">
+                    Muž / chlapec
+                  </option>
+                  <option value="female">
+                    Žena / dívka
+                  </option>
+                </select>
+              </div>
+
+              <div className="field">
+                <label>Město</label>
+                <input name="city" />
+              </div>
+
+              <div className="field">
+                <label>Telefon</label>
+                <input name="phone" />
+              </div>
+
+              <div className="field">
+                <label>E-mail</label>
+                <input
+                  name="email"
+                  type="email"
+                />
+              </div>
+
+              <div className="field">
+                <label>Role / typ *</label>
+
+                <select name="role">
+                  <option>Herec / herečka</option>
+                  <option>Komparz</option>
+                  <option>Statista</option>
+                  <option>Model / modelka</option>
+                  <option>Kaskadér</option>
+                  <option>Filmový štáb</option>
+                  <option>Jiné</option>
+                </select>
+              </div>
+
+              <div className="field">
+                <label>Výška (cm)</label>
+                <input
+                  name="height_cm"
+                  type="number"
+                />
+              </div>
+
+              <div className="field full">
+                <label>Zkušenosti</label>
+
+                <textarea
+                  name="experience"
+                  placeholder="Herectví, divadlo, film, reklama, modeling..."
+                />
+              </div>
+
+              <div className="field full">
+                <label>
+                  Dostupnost / poznámka
+                </label>
+
+                <textarea
+                  name="availability"
+                />
+              </div>
+
+              <div className="field full">
+                <label>
+                  Fotografie * (1–5)
+                </label>
+
+                <input
+                  name="photos"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  required
+                />
+
+                <div
+                  className="muted"
+                  style={{
+                    fontSize: 12,
+                    marginTop: 6,
+                  }}
+                >
+                  Nahraj portrét, celou postavu a případně
+                  další aktuální fotografie. Max. 5 fotek,
+                  10 MB každá.
+                </div>
               </div>
             </div>
-          </div>
 
-          <button
-            className="btn primary"
-            type="button"
-            onClick={save}
-            disabled={saving}
-            style={{ marginTop: 20 }}
-          >
-            {saving
-              ? "Ukládám změny..."
-              : "Uložit změny"}
-          </button>
+            <p
+              className="muted"
+              style={{
+                fontSize: 12,
+              }}
+            >
+              Odesláním formuláře souhlasíš se zpracováním
+              údajů a fotografií pro účely castingu. Před
+              ostrým spuštěním doplňte vlastní zásady
+              ochrany osobních údajů.
+            </p>
+
+            <button
+              className="btn primary"
+              type="submit"
+              disabled={sending}
+            >
+              {sending
+                ? "Odesílám registraci a fotografie..."
+                : "Odeslat registraci"}
+            </button>
+          </form>
         </div>
       </main>
     </>
