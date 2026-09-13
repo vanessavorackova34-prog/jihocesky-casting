@@ -98,7 +98,7 @@ export default function Home() {
       </main>
 
       <footer id="kontakt">
-        © 2026 Jihočeský Casting
+        © 2026 LEXAPA Casting
       </footer>
     </>
   );
