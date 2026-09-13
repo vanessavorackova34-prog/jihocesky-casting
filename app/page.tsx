@@ -27,7 +27,7 @@ export default function Home() {
             </div>
 
             <h1>
-              JIHOČESKÝ
+              LEXAPA
               <br />
               <span className="gold">CASTING</span>
             </h1>
