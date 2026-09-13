@@ -43,7 +43,7 @@ export default function Prihlaseni() {
     <>
       <header className="top">
         <div className="logo">
-          🎬 <span>JIHOČESKÝ CASTING</span>
+          🎬 <span>LEXAPA CASTING</span>
         </div>
         <Link className="btn" href="/">
           Zpět
