@@ -5,7 +5,7 @@ export default function Home() {
     <>
       <header className="top">
         <div className="logo">
-          🎬 <span>JIHOČESKÝ CASTING</span>
+          🎬 <span>LEXAPA CASTING</span>
         </div>
 
         <nav className="nav">
