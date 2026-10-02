@@ -156,7 +156,35 @@ export default function AdminPage() {
         : current
     );
   }
+function downloadBackup() {
+  if (candidates.length === 0) {
+    alert("Nejsou načtená žádná data.");
+    return;
+  }
 
+  const backup = {
+    created_at: new Date().toISOString(),
+    total_candidates: candidates.length,
+    candidates: candidates,
+  };
+
+  const blob = new Blob(
+    [JSON.stringify(backup, null, 2)],
+    { type: "application/json" }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = `lexapa-backup-${Date.now()}.json`;
+
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  URL.revokeObjectURL(url);
+}
   async function deleteCandidate(
     id: string,
     name: string
