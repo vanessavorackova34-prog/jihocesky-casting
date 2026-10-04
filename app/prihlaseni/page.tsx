@@ -22,14 +22,20 @@ export default function Prihlaseni() {
         setError("Web není připojený k databázi.");
         return;
       }
-      const supabase = createBrowserClient(url, key);
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
-        password,
-      });
-      if (error) {
-        setError("Nesprávný e-mail nebo heslo.");
-        return;
+    const { data, error } = await supabase.auth.signInWithPassword({
+  email: email.trim().toLowerCase(),
+  password,
+});
+
+if (error) {
+  setError(`Supabase chyba: ${error.message}`);
+  return;
+}
+
+if (!data.session) {
+  setError("Přihlášení proběhlo, ale nevznikla session.");
+  return;
+}
       }
       router.push("/admin");
       router.refresh();
