@@ -1064,42 +1064,16 @@ function CandidateCard({
   const [photo, setPhoto] = useState("");
   const [originalPhoto, setOriginalPhoto] = useState("");
   const [photoLoading, setPhotoLoading] = useState(true);
-  const [shouldLoad, setShouldLoad] = useState(priority);
-  const cardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (priority) {
-      setShouldLoad(true);
-      return;
-    }
-
-    const element = cardRef.current;
-    if (!element) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setShouldLoad(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "300px 0px" }
-    );
-
-    observer.observe(element);
-
-    return () => observer.disconnect();
-  }, [priority]);
-
-  useEffect(() => {
-    if (!shouldLoad) return;
     loadPhoto();
-  }, [candidate.id, shouldLoad]);
+  }, [candidate.id]);
 
   async function loadPhoto() {
     const supabase = getSupabase();
     setPhotoLoading(true);
 
+    // Prefer the exact path stored with the candidate.
     const storedPath = (candidate.photo_paths || [])
       .find(isImagePath);
 
@@ -1108,6 +1082,7 @@ function CandidateCard({
         supabase,
         storedPath
       );
+
       setOriginalPhoto(original);
       setPhoto(
         getFastPhotoUrl(
@@ -1120,6 +1095,7 @@ function CandidateCard({
       return;
     }
 
+    // Legacy profiles: find their files directly in Storage.
     let files:
       | { name: string }[]
       | null = null;
@@ -1129,7 +1105,7 @@ function CandidateCard({
         await supabase.storage
           .from("fotky-hercu")
           .list(candidate.id, {
-            limit: 10,
+            limit: 100,
             sortBy: {
               column: "name",
               order: "asc",
@@ -1197,8 +1173,8 @@ function CandidateCard({
           alt={`${candidate.first_name || ""} ${
             candidate.last_name || ""
           }`}
-          loading={priority ? "eager" : "lazy"}
-          fetchPriority={priority ? "high" : "auto"}
+          loading="eager"
+          fetchPriority="high"
           decoding="async"
           onLoad={() => setPhotoLoading(false)}
           onError={(event) => {
