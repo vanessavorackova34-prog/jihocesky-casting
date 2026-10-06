@@ -76,6 +76,31 @@ function getOriginalPhotoUrl(
   return data.publicUrl;
 }
 
+type PhotoItem = {
+  previewUrl: string;
+  originalUrl: string;
+};
+
+function buildPhotoItem(
+  supabase: ReturnType<typeof getSupabase>,
+  path: string,
+  width: number,
+  height: number
+): PhotoItem {
+  return {
+    previewUrl: getFastPhotoUrl(
+      supabase,
+      path,
+      width,
+      height
+    ),
+    originalUrl: getOriginalPhotoUrl(
+      supabase,
+      path
+    ),
+  };
+}
+
 export default function ProductionDashboard() {
   const router = useRouter();
 
@@ -103,7 +128,7 @@ export default function ProductionDashboard() {
   const [selectedCandidate, setSelectedCandidate] =
     useState<Candidate | null>(null);
 
-  const [photos, setPhotos] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<PhotoItem[]>([]);
 
   useEffect(() => {
     loadCandidates();
@@ -154,7 +179,12 @@ export default function ProductionDashboard() {
     if (storedPaths.length > 0) {
       setPhotos(
         storedPaths.map((path) =>
-          getFastPhotoUrl(supabase, path, 900, 1100)
+          buildPhotoItem(
+            supabase,
+            path,
+            900,
+            1100
+          )
         )
       );
       return;
@@ -174,7 +204,7 @@ export default function ProductionDashboard() {
     const photoUrls = data
       .filter((file) => isImagePath(file.name))
       .map((file) =>
-        getFastPhotoUrl(
+        buildPhotoItem(
           supabase,
           `${candidate.id}/${file.name}`,
           900,
@@ -822,18 +852,10 @@ export default function ProductionDashboard() {
               >
                 {photos.map(
                   (photo, index) => (
-                    <img
-                      key={photo}
-                      src={photo}
-                      alt={`Fotka ${index + 1}`}
-                      loading="lazy"
-                      decoding="async"
-                      style={{
-                        width: "100%",
-                        height: "220px",
-                        objectFit: "cover",
-                        borderRadius: "10px",
-                      }}
+                    <DetailPhoto
+                      key={`${photo.originalUrl}-${index}`}
+                      photo={photo}
+                      index={index}
                     />
                   )
                 )}
@@ -932,6 +954,101 @@ export default function ProductionDashboard() {
         </div>
       )}
     </main>
+  );
+}
+
+function DetailPhoto({
+  photo,
+  index,
+}: {
+  photo: PhotoItem;
+  index: number;
+}) {
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [usingOriginal, setUsingOriginal] =
+    useState(false);
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "220px",
+        borderRadius: "10px",
+        overflow: "hidden",
+        background: "#181818",
+        border: "1px solid #292929",
+      }}
+    >
+      {!loaded && !failed && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#888",
+            fontSize: "14px",
+          }}
+        >
+          Načítám fotografii…
+        </div>
+      )}
+
+      {failed && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#999",
+            fontSize: "14px",
+            padding: "15px",
+            textAlign: "center",
+          }}
+        >
+          Fotografie se nepodařila načíst
+        </div>
+      )}
+
+      {!failed && (
+        <img
+          src={
+            usingOriginal
+              ? photo.originalUrl
+              : photo.previewUrl
+          }
+          alt={`Fotografie ${index + 1}`}
+          loading={index < 2 ? "eager" : "lazy"}
+          fetchPriority={
+            index === 0 ? "high" : "auto"
+          }
+          decoding="async"
+          onLoad={() => setLoaded(true)}
+          onError={() => {
+            if (!usingOriginal) {
+              setUsingOriginal(true);
+              setLoaded(false);
+              return;
+            }
+
+            setFailed(true);
+          }}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+            opacity: loaded ? 1 : 0,
+            transition: "opacity 160ms ease",
+          }}
+        />
+      )}
+    </div>
   );
 }
 
