@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { useRouter } from "next/navigation";
 import {
@@ -61,6 +61,17 @@ function getFastPhotoUrl(
         quality: 72,
       },
     });
+
+  return data.publicUrl;
+}
+
+function getOriginalPhotoUrl(
+  supabase: ReturnType<typeof getSupabase>,
+  path: string
+) {
+  const { data } = supabase.storage
+    .from("fotky-hercu")
+    .getPublicUrl(path);
 
   return data.publicUrl;
 }
@@ -934,11 +945,39 @@ function CandidateCard({
   priority: boolean;
 }) {
   const [photo, setPhoto] = useState("");
+  const [originalPhoto, setOriginalPhoto] = useState("");
   const [photoLoading, setPhotoLoading] = useState(true);
+  const [shouldLoad, setShouldLoad] = useState(priority);
+  const cardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    if (priority) {
+      setShouldLoad(true);
+      return;
+    }
+
+    const element = cardRef.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "800px 0px" }
+    );
+
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [priority]);
+
+  useEffect(() => {
+    if (!shouldLoad) return;
     loadPhoto();
-  }, [candidate.id]);
+  }, [candidate.id, shouldLoad]);
 
   async function loadPhoto() {
     const supabase = getSupabase();
@@ -948,6 +987,11 @@ function CandidateCard({
       .find(isImagePath);
 
     if (storedPath) {
+      const original = getOriginalPhotoUrl(
+        supabase,
+        storedPath
+      );
+      setOriginalPhoto(original);
       setPhoto(
         getFastPhotoUrl(
           supabase,
@@ -959,17 +1003,38 @@ function CandidateCard({
       return;
     }
 
-    const { data, error } =
-      await supabase.storage
-        .from("fotky-hercu")
-        .list(candidate.id);
+    let files:
+      | { name: string }[]
+      | null = null;
 
-    if (error || !data) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { data, error } =
+        await supabase.storage
+          .from("fotky-hercu")
+          .list(candidate.id, {
+            limit: 10,
+            sortBy: {
+              column: "name",
+              order: "asc",
+            },
+          });
+
+      if (!error && data) {
+        files = data;
+        break;
+      }
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, 350 * (attempt + 1))
+      );
+    }
+
+    if (!files) {
       setPhotoLoading(false);
       return;
     }
 
-    const file = data.find((item) =>
+    const file = files.find((item) =>
       isImagePath(item.name)
     );
 
@@ -978,10 +1043,19 @@ function CandidateCard({
       return;
     }
 
+    const path =
+      `${candidate.id}/${file.name}`;
+
+    const original = getOriginalPhotoUrl(
+      supabase,
+      path
+    );
+
+    setOriginalPhoto(original);
     setPhoto(
       getFastPhotoUrl(
         supabase,
-        `${candidate.id}/${file.name}`,
+        path,
         520,
         680
       )
@@ -990,6 +1064,7 @@ function CandidateCard({
 
   return (
     <div
+      ref={cardRef}
       onClick={onClick}
       style={{
         background: "#111",
@@ -1009,7 +1084,17 @@ function CandidateCard({
           fetchPriority={priority ? "high" : "auto"}
           decoding="async"
           onLoad={() => setPhotoLoading(false)}
-          onError={() => setPhotoLoading(false)}
+          onError={(event) => {
+            if (
+              originalPhoto &&
+              event.currentTarget.src !== originalPhoto
+            ) {
+              event.currentTarget.src = originalPhoto;
+              return;
+            }
+
+            setPhotoLoading(false);
+          }}
           style={{
             width: "100%",
             height: "300px",
