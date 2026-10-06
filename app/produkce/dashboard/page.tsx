@@ -966,8 +966,6 @@ function DetailPhoto({
 }) {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [usingOriginal, setUsingOriginal] =
-    useState(false);
 
   return (
     <div
@@ -1017,11 +1015,7 @@ function DetailPhoto({
 
       {!failed && (
         <img
-          src={
-            usingOriginal
-              ? photo.originalUrl
-              : photo.previewUrl
-          }
+          src={photo.originalUrl}
           alt={`Fotografie ${index + 1}`}
           loading={index < 2 ? "eager" : "lazy"}
           fetchPriority={
@@ -1029,15 +1023,7 @@ function DetailPhoto({
           }
           decoding="async"
           onLoad={() => setLoaded(true)}
-          onError={() => {
-            if (!usingOriginal) {
-              setUsingOriginal(true);
-              setLoaded(false);
-              return;
-            }
-
-            setFailed(true);
-          }}
+          onError={() => setFailed(true)}
           style={{
             width: "100%",
             height: "100%",
@@ -1157,7 +1143,6 @@ function CandidateCard({
 
   return (
     <div
-      ref={cardRef}
       onClick={onClick}
       style={{
         background: "#111",
