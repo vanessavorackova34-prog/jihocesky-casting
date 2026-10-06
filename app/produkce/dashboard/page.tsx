@@ -765,7 +765,7 @@ export default function ProductionDashboard() {
                 <CandidateCard
                   key={candidate.id}
                   candidate={candidate}
-                  priority={index < 12}
+                  priority={index < 4}
                   onClick={() =>
                     openCandidate(candidate)
                   }
@@ -1083,7 +1083,7 @@ function CandidateCard({
           observer.disconnect();
         }
       },
-      { rootMargin: "800px 0px" }
+      { rootMargin: "300px 0px" }
     );
 
     observer.observe(element);
@@ -1113,8 +1113,8 @@ function CandidateCard({
         getFastPhotoUrl(
           supabase,
           storedPath,
-          520,
-          680
+          360,
+          270
         )
       );
       return;
@@ -1173,8 +1173,8 @@ function CandidateCard({
       getFastPhotoUrl(
         supabase,
         path,
-        520,
-        680
+        360,
+        270
       )
     );
   }
@@ -1225,7 +1225,10 @@ function CandidateCard({
         <div
           style={{
             height: "300px",
-            background: "#181818",
+            background:
+              "linear-gradient(110deg, #181818 30%, #222 45%, #181818 60%)",
+            backgroundSize: "200% 100%",
+            animation: "photoSkeleton 1.2s linear infinite",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -1357,4 +1360,11 @@ const buttonStyle = {
 const cardText = {
   margin: "4px 0",
   color: "#aaa",
+};
+
+const photoSkeletonStyle = {
+  "@keyframes photoSkeleton": {
+    "0%": { backgroundPosition: "200% 0" },
+    "100%": { backgroundPosition: "-200% 0" },
+  },
 };
