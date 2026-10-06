@@ -24,13 +24,45 @@ type Candidate = {
   availability?: string | null;
   status?: string | null;
   gender?: string | null;
+  photo_paths?: string[] | null;
 };
 
 function getSupabase() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)!
   );
+}
+
+function isImagePath(path: string) {
+  const name = path.toLowerCase();
+  return (
+    name.endsWith(".jpg") ||
+    name.endsWith(".jpeg") ||
+    name.endsWith(".png") ||
+    name.endsWith(".webp")
+  );
+}
+
+function getFastPhotoUrl(
+  supabase: ReturnType<typeof getSupabase>,
+  path: string,
+  width: number,
+  height: number
+) {
+  const { data } = supabase.storage
+    .from("fotky-hercu")
+    .getPublicUrl(path, {
+      transform: {
+        width,
+        height,
+        resize: "cover",
+        quality: 72,
+      },
+    });
+
+  return data.publicUrl;
 }
 
 export default function ProductionDashboard() {
@@ -104,6 +136,19 @@ export default function ProductionDashboard() {
     const supabase = getSupabase();
 
     setSelectedCandidate(candidate);
+
+    const storedPaths = (candidate.photo_paths || [])
+      .filter(isImagePath);
+
+    if (storedPaths.length > 0) {
+      setPhotos(
+        storedPaths.map((path) =>
+          getFastPhotoUrl(supabase, path, 900, 1100)
+        )
+      );
+      return;
+    }
+
     setPhotos([]);
 
     const { data, error } =
@@ -116,27 +161,15 @@ export default function ProductionDashboard() {
     }
 
     const photoUrls = data
-      .filter((file) => {
-        const name =
-          file.name.toLowerCase();
-
-        return (
-          name.endsWith(".jpg") ||
-          name.endsWith(".jpeg") ||
-          name.endsWith(".png") ||
-          name.endsWith(".webp")
-        );
-      })
-      .map((file) => {
-        const { data: publicUrl } =
-          supabase.storage
-            .from("fotky-hercu")
-            .getPublicUrl(
-              `${candidate.id}/${file.name}`
-            );
-
-        return publicUrl.publicUrl;
-      });
+      .filter((file) => isImagePath(file.name))
+      .map((file) =>
+        getFastPhotoUrl(
+          supabase,
+          `${candidate.id}/${file.name}`,
+          900,
+          1100
+        )
+      );
 
     setPhotos(photoUrls);
   }
@@ -687,10 +720,11 @@ export default function ProductionDashboard() {
             }}
           >
             {filteredCandidates.map(
-              (candidate) => (
+              (candidate, index) => (
                 <CandidateCard
                   key={candidate.id}
                   candidate={candidate}
+                  priority={index < 12}
                   onClick={() =>
                     openCandidate(candidate)
                   }
@@ -781,6 +815,8 @@ export default function ProductionDashboard() {
                       key={photo}
                       src={photo}
                       alt={`Fotka ${index + 1}`}
+                      loading="lazy"
+                      decoding="async"
                       style={{
                         width: "100%",
                         height: "220px",
@@ -891,11 +927,14 @@ export default function ProductionDashboard() {
 function CandidateCard({
   candidate,
   onClick,
+  priority,
 }: {
   candidate: Candidate;
   onClick: () => void;
+  priority: boolean;
 }) {
   const [photo, setPhoto] = useState("");
+  const [photoLoading, setPhotoLoading] = useState(true);
 
   useEffect(() => {
     loadPhoto();
@@ -903,36 +942,50 @@ function CandidateCard({
 
   async function loadPhoto() {
     const supabase = getSupabase();
+    setPhotoLoading(true);
+
+    const storedPath = (candidate.photo_paths || [])
+      .find(isImagePath);
+
+    if (storedPath) {
+      setPhoto(
+        getFastPhotoUrl(
+          supabase,
+          storedPath,
+          520,
+          680
+        )
+      );
+      return;
+    }
 
     const { data, error } =
       await supabase.storage
         .from("fotky-hercu")
         .list(candidate.id);
 
-    if (error || !data) return;
+    if (error || !data) {
+      setPhotoLoading(false);
+      return;
+    }
 
-    const file = data.find((item) => {
-      const name =
-        item.name.toLowerCase();
+    const file = data.find((item) =>
+      isImagePath(item.name)
+    );
 
-      return (
-        name.endsWith(".jpg") ||
-        name.endsWith(".jpeg") ||
-        name.endsWith(".png") ||
-        name.endsWith(".webp")
-      );
-    });
+    if (!file) {
+      setPhotoLoading(false);
+      return;
+    }
 
-    if (!file) return;
-
-    const { data: publicUrl } =
-      supabase.storage
-        .from("fotky-hercu")
-        .getPublicUrl(
-          `${candidate.id}/${file.name}`
-        );
-
-    setPhoto(publicUrl.publicUrl);
+    setPhoto(
+      getFastPhotoUrl(
+        supabase,
+        `${candidate.id}/${file.name}`,
+        520,
+        680
+      )
+    );
   }
 
   return (
@@ -952,10 +1005,18 @@ function CandidateCard({
           alt={`${candidate.first_name || ""} ${
             candidate.last_name || ""
           }`}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
+          decoding="async"
+          onLoad={() => setPhotoLoading(false)}
+          onError={() => setPhotoLoading(false)}
           style={{
             width: "100%",
             height: "300px",
             objectFit: "cover",
+            display: "block",
+            opacity: photoLoading ? 0.75 : 1,
+            transition: "opacity 160ms ease",
           }}
         />
       ) : (
@@ -969,7 +1030,9 @@ function CandidateCard({
             color: "#777",
           }}
         >
-          Bez fotografie
+          {photoLoading
+            ? "Načítám fotografii…"
+            : "Bez fotografie"}
         </div>
       )}
 
