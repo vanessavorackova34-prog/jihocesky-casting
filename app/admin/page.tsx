@@ -24,6 +24,7 @@ type Candidate = {
   availability: string | null;
   status: string | null;
   gender: string | null;
+  photo_paths?: string[] | null;
   photos?: string[];
 };
 
@@ -93,34 +94,112 @@ export default function AdminPage() {
       return;
     }
 
-    const withPhotos = await Promise.all(
-      (data || []).map(async (candidate) => {
-        const { data: files } =
-          await supabase.storage
-            .from("fotky-hercu")
-            .list(candidate.id);
+    const initialCandidates: Candidate[] =
+      (data || []).map((candidate) => {
+        const paths = Array.isArray(
+          candidate.photo_paths
+        )
+          ? candidate.photo_paths
+          : [];
 
-        const photos =
-          files?.map((file) => {
-            const { data } =
-              supabase.storage
-                .from("fotky-hercu")
-                .getPublicUrl(
-                  `${candidate.id}/${file.name}`
-                );
+        const photos = paths.map((path: string) => {
+          const { data } =
+            supabase.storage
+              .from("fotky-hercu")
+              .getPublicUrl(path, {
+                transform: {
+                  width: 420,
+                  height: 320,
+                  resize: "cover",
+                  quality: 72,
+                },
+              });
 
-            return data.publicUrl;
-          }) || [];
+          return data.publicUrl;
+        });
 
         return {
           ...candidate,
           photos,
         };
-      })
+      });
+
+    setCandidates(initialCandidates);
+    setLoading(false);
+
+    const missing = initialCandidates.filter(
+      (candidate) =>
+        !candidate.photos ||
+        candidate.photos.length === 0
     );
 
-    setCandidates(withPhotos);
-    setLoading(false);
+    // Starší profily nemusí mít photo_paths uložené v řádku.
+    // Ty dohledáme postupně na pozadí, aby celá databáze
+    // nemusela čekat na stovky Storage požadavků.
+    const queue = [...missing];
+
+    async function worker() {
+      while (queue.length > 0) {
+        const candidate = queue.shift();
+        if (!candidate) return;
+
+        const { data: files, error: listError } =
+          await supabase.storage
+            .from("fotky-hercu")
+            .list(candidate.id, {
+              limit: 20,
+              sortBy: {
+                column: "name",
+                order: "asc",
+              },
+            });
+
+        if (listError || !files) {
+          continue;
+        }
+
+        const photos = files
+          .filter((file) =>
+            /\.(jpe?g|png|webp|heic|heif)$/i.test(
+              file.name
+            )
+          )
+          .map((file) => {
+            const path =
+              `${candidate.id}/${file.name}`;
+
+            const { data } =
+              supabase.storage
+                .from("fotky-hercu")
+                .getPublicUrl(path, {
+                  transform: {
+                    width: 420,
+                    height: 320,
+                    resize: "cover",
+                    quality: 72,
+                  },
+                });
+
+            return data.publicUrl;
+          });
+
+        if (photos.length === 0) {
+          continue;
+        }
+
+        setCandidates((current) =>
+          current.map((item) =>
+            item.id === candidate.id
+              ? { ...item, photos }
+              : item
+          )
+        );
+      }
+    }
+
+    await Promise.all(
+      Array.from({ length: 4 }, () => worker())
+    );
   }
 
   async function changeStatus(
@@ -746,6 +825,8 @@ function downloadBackup() {
                 <img
                   src={candidate.photos[0]}
                   alt={`${candidate.first_name} ${candidate.last_name}`}
+                  loading="lazy"
+                  decoding="async"
                   style={{
                     width: "100%",
                     height: 300,
@@ -911,6 +992,8 @@ function downloadBackup() {
                           key={index}
                           src={photo}
                           alt={`Fotografie ${index + 1}`}
+                          loading={index < 2 ? "eager" : "lazy"}
+                          decoding="async"
                           style={{
                             width: "100%",
                             height: 220,
