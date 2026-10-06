@@ -18,6 +18,105 @@ function safeFileName(name: string) {
     .replace(/-+/g, "-");
 }
 
+const MAX_IMAGE_EDGE = 1800;
+const JPEG_QUALITY = 0.82;
+
+async function optimizePhoto(file: File, index: number) {
+  // SVG/GIF necháváme beze změny. U ostatních fotek se pokusíme
+  // o převod do úsporného JPEG, aby se databáze načítala rychle.
+  if (
+    file.type === "image/svg+xml" ||
+    file.type === "image/gif"
+  ) {
+    return file;
+  }
+
+  const objectUrl = URL.createObjectURL(file);
+
+  try {
+    const image = new Image();
+    image.decoding = "async";
+
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(
+        new Error("Fotografii se nepodařilo načíst.")
+      );
+      image.src = objectUrl;
+    });
+
+    const sourceWidth = image.naturalWidth;
+    const sourceHeight = image.naturalHeight;
+
+    if (!sourceWidth || !sourceHeight) {
+      return file;
+    }
+
+    const scale = Math.min(
+      1,
+      MAX_IMAGE_EDGE / Math.max(sourceWidth, sourceHeight)
+    );
+
+    const width = Math.max(
+      1,
+      Math.round(sourceWidth * scale)
+    );
+    const height = Math.max(
+      1,
+      Math.round(sourceHeight * scale)
+    );
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext("2d", {
+      alpha: false,
+    });
+
+    if (!context) return file;
+
+    context.drawImage(image, 0, 0, width, height);
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(
+        resolve,
+        "image/jpeg",
+        JPEG_QUALITY
+      )
+    );
+
+    if (!blob) return file;
+
+    // Pokud by převod výjimečně vytvořil větší soubor, ponecháme originál.
+    if (
+      blob.size >= file.size &&
+      file.type !== "image/heic" &&
+      file.type !== "image/heif"
+    ) {
+      return file;
+    }
+
+    const base =
+      safeFileName(
+        file.name.replace(/\.[^.]+$/, "")
+      ) || `foto-${index + 1}`;
+
+    return new File(
+      [blob],
+      `${base}.jpg`,
+      {
+        type: "image/jpeg",
+        lastModified: Date.now(),
+      }
+    );
+  } catch {
+    return file;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 export default function Registration() {
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
@@ -123,7 +222,10 @@ export default function Registration() {
       const uploadedPaths: string[] = [];
 
       for (let i = 0; i < photos.length; i++) {
-        const file = photos[i];
+        const file = await optimizePhoto(
+          photos[i],
+          i
+        );
 
         const ext = file.name.includes(".")
           ? file.name.split(".").pop()
@@ -407,7 +509,7 @@ export default function Registration() {
                     marginTop: 6,
                   }}
                 >
-                  Max. 5 fotografií, 10 MB každá.
+                  Max. 5 fotografií, 10 MB každá. Před odesláním se fotografie automaticky optimalizují pro rychlé a kvalitní zobrazení.
                 </div>
               </div>
             </div>
