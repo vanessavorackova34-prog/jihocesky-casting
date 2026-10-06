@@ -26,6 +26,7 @@ type Candidate = {
   gender: string | null;
   photo_paths?: string[] | null;
   photos?: string[];
+  photoOriginals?: string[];
 };
 
 export default function AdminPage() {
@@ -118,25 +119,26 @@ export default function AdminPage() {
           return data.publicUrl;
         });
 
+        const photoOriginals = paths.map((path: string) =>
+          supabase.storage
+            .from("fotky-hercu")
+            .getPublicUrl(path).data.publicUrl
+        );
+
         return {
           ...candidate,
           photos,
+          photoOriginals,
         };
       });
 
     setCandidates(initialCandidates);
     setLoading(false);
 
-    const missing = initialCandidates.filter(
-      (candidate) =>
-        !candidate.photos ||
-        candidate.photos.length === 0
-    );
-
-    // Starší profily nemusí mít photo_paths uložené v řádku.
-    // Ty dohledáme postupně na pozadí, aby celá databáze
-    // nemusela čekat na stovky Storage požadavků.
-    const queue = [...missing];
+    // Ověříme Storage i u profilů, které mají photo_paths uložené.
+    // Některé starší záznamy mají cesty zastaralé nebo neúplné.
+    // Skutečné soubory ze Storage proto bereme jako zdroj pravdy.
+    const queue = [...initialCandidates];
 
     async function worker() {
       while (queue.length > 0) {
@@ -158,30 +160,36 @@ export default function AdminPage() {
           continue;
         }
 
-        const photos = files
-          .filter((file) =>
-            /\.(jpe?g|png|webp|heic|heif)$/i.test(
-              file.name
-            )
+        const imageFiles = files.filter((file) =>
+          /\.(jpe?g|png|webp|heic|heif)$/i.test(
+            file.name
           )
-          .map((file) => {
-            const path =
-              `${candidate.id}/${file.name}`;
+        );
 
-            const { data } =
-              supabase.storage
-                .from("fotky-hercu")
-                .getPublicUrl(path, {
-                  transform: {
-                    width: 420,
-                    height: 320,
-                    resize: "cover",
-                    quality: 72,
-                  },
-                });
+        const photos = imageFiles.map((file) => {
+          const path =
+            `${candidate.id}/${file.name}`;
 
-            return data.publicUrl;
-          });
+          return supabase.storage
+            .from("fotky-hercu")
+            .getPublicUrl(path, {
+              transform: {
+                width: 420,
+                height: 320,
+                resize: "cover",
+                quality: 72,
+              },
+            }).data.publicUrl;
+        });
+
+        const photoOriginals = imageFiles.map((file) => {
+          const path =
+            `${candidate.id}/${file.name}`;
+
+          return supabase.storage
+            .from("fotky-hercu")
+            .getPublicUrl(path).data.publicUrl;
+        });
 
         if (photos.length === 0) {
           continue;
@@ -190,7 +198,7 @@ export default function AdminPage() {
         setCandidates((current) =>
           current.map((item) =>
             item.id === candidate.id
-              ? { ...item, photos }
+              ? { ...item, photos, photoOriginals }
               : item
           )
         );
@@ -827,6 +835,16 @@ function downloadBackup() {
                   alt={`${candidate.first_name} ${candidate.last_name}`}
                   loading="lazy"
                   decoding="async"
+                  onError={(event) => {
+                    const original =
+                      candidate.photoOriginals?.[0];
+                    if (
+                      original &&
+                      event.currentTarget.src !== original
+                    ) {
+                      event.currentTarget.src = original;
+                    }
+                  }}
                   style={{
                     width: "100%",
                     height: 300,
@@ -990,10 +1008,22 @@ function downloadBackup() {
                       (photo, index) => (
                         <img
                           key={index}
-                          src={photo}
+                          src={
+                            selectedCandidate.photoOriginals?.[index] ||
+                            photo
+                          }
                           alt={`Fotografie ${index + 1}`}
                           loading={index < 2 ? "eager" : "lazy"}
                           decoding="async"
+                          onError={(event) => {
+                            const fallback = photo;
+                            if (
+                              fallback &&
+                              event.currentTarget.src !== fallback
+                            ) {
+                              event.currentTarget.src = fallback;
+                            }
+                          }}
                           style={{
                             width: "100%",
                             height: 220,
