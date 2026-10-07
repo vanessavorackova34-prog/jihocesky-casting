@@ -220,6 +220,19 @@ export default function AdminPage() {
     );
   }
 
+  async function createProjectFromSelection() {
+    if (!supabase || selectedIds.length === 0) return;
+    const name = window.prompt("Název projektu / natáčení:", projectName);
+    if (!name?.trim()) return;
+    setProjectName(name.trim());
+    const { data: project, error } = await supabase.from("casting_projects").insert({ name: name.trim() }).select("id").single();
+    if (error || !project) { alert("Projekt se nepodařilo vytvořit: " + (error?.message || "")); return; }
+    const rows = selectedIds.map(candidate_id => ({ project_id: project.id, candidate_id }));
+    const { error: linkError } = await supabase.from("project_candidates").insert(rows);
+    if (linkError) { alert("Projekt vznikl, ale nepodařilo se přiřadit všechny kandidáty: " + linkError.message); return; }
+    alert(`Projekt „${name.trim()}“ vytvořen. Přiřazeno kandidátů: ${selectedIds.length}.`);
+  }
+
   function openBulkSms() {
     const selected = candidates.filter(
       (candidate) =>
@@ -897,6 +910,9 @@ function downloadBackup() {
             <strong>Vybráno: {selectedIds.length}</strong>
             <button type="button" onClick={openBulkSms} style={actionButton}>
               📱 Hromadná SMS
+            </button>
+            <button type="button" onClick={createProjectFromSelection} style={actionButton}>
+              🎬 Vytvořit projekt / shortlist
             </button>
             <button type="button" onClick={() => setSelectedIds([])} style={actionButton}>
               Zrušit výběr
