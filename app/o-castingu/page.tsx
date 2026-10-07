@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function Page(){return <main className="section"><div className="card"><div className="eyebrow">LEXAPA CASTING</div><h1>O castingu</h1><p className="muted">LEXAPA CASTING propojuje herce, komparz, modely a další talenty s filmovými, televizními a reklamními produkcemi po celé České republice.</p><p className="muted">Databáze slouží talentům i produkcím a umožňuje rychlý výběr vhodného obsazení pro konkrétní projekty.</p><Link className="btn primary" href="/">← Zpět na hlavní stránku</Link></div></main>}
