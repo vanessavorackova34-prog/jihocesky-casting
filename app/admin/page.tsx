@@ -704,7 +704,7 @@ function downloadBackup() {
 <button
   onClick={() => router.push("/admin/projekty")}
   style={{
-    background: "#222", color: "#fff", border: "1px solid #555",
+    background: "#fff", color: "#8a651b", border: "1px solid #d7bd7b",
     borderRadius: 8, padding: "12px 20px", fontWeight: 600, cursor: "pointer",
   }}
 >
@@ -1050,7 +1050,7 @@ function downloadBackup() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#777",
+                    color: "#8c7a55",
                   }}
                 >
                   Žádná fotografie
@@ -1146,7 +1146,7 @@ function downloadBackup() {
             style={{
               position: "fixed",
               inset: 0,
-              background: "rgba(0,0,0,0.88)",
+              background: "rgba(47,36,18,0.62)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -1433,8 +1433,8 @@ function downloadBackup() {
   );
 }
 
-const statCard: React.CSSProperties = { background:"linear-gradient(145deg,#171717,#0c0c0c)", border:"1px solid #3b321c", borderRadius:14, padding:"18px 20px", display:"flex", flexDirection:"column", gap:8 };
-const statLabel: React.CSSProperties = { color:"#b7a46a", fontSize:11, letterSpacing:1.4, fontWeight:700 };
+const statCard: React.CSSProperties = { background:"linear-gradient(145deg,#ffffff,#fbf5e8)", border:"1px solid #dcc58d", boxShadow:"0 8px 24px rgba(115,82,20,.08)", borderRadius:14, padding:"18px 20px", display:"flex", flexDirection:"column", gap:8 };
+const statLabel: React.CSSProperties = { color:"#a77a22", fontSize:11, letterSpacing:1.4, fontWeight:700 };
 const statValue: React.CSSProperties = { fontSize:28, lineHeight:1 };
 
 const inputStyle: React.CSSProperties = {
@@ -1493,7 +1493,7 @@ function Info({
       <div
         style={{
           fontSize: 11,
-          color: "#777",
+          color: "#8c7a55",
           textTransform: "uppercase",
           letterSpacing: 1,
           marginBottom: 6,
