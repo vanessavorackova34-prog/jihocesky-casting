@@ -72,7 +72,7 @@ export default function Prihlaseni() {
         </Link>
       </header>
 
-      <main className="section">
+      <main className="organizerLogin">
         <div
           className="card"
           style={{ maxWidth: 500, margin: "auto" }}
