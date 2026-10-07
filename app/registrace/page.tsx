@@ -201,6 +201,12 @@ export default function Registration() {
         shoe_size: f.get("shoe_size") ? Number(f.get("shoe_size")) : null,
         experience: f.get("experience"),
         availability: f.get("availability"),
+        professional_photoshoot_interest:
+          f.get("professional_photoshoot_interest") === "yes"
+            ? true
+            : f.get("professional_photoshoot_interest") === "no"
+              ? false
+              : null,
         photo_paths: [],
       };
 
@@ -517,6 +523,15 @@ export default function Registration() {
                 <label>Dostupnost / poznámka</label>
 
                 <textarea name="availability" />
+              </div>
+
+              <div className="field full">
+                <label>Máte zájem o profesionální přefocení do databáze LEXAPA CASTING za 600 Kč?</label>
+                <select name="professional_photoshoot_interest" defaultValue="">
+                  <option value="">Vyberte možnost</option>
+                  <option value="yes">Ano</option>
+                  <option value="no">Ne</option>
+                </select>
               </div>
 
               <div className="field full">
