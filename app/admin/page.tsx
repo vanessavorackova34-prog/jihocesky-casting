@@ -23,6 +23,13 @@ type Candidate = {
   experience: string | null;
   availability: string | null;
   professional_photoshoot_interest: boolean | null;
+  has_driving_license: boolean | null;
+  has_own_car: boolean | null;
+  clothing_size: string | null;
+  trouser_size: string | null;
+  head_cm: number | null;
+  languages: string | null;
+  skills: string | null;
   status: string | null;
   gender: string | null;
   photo_paths?: string[] | null;
@@ -1203,6 +1210,14 @@ function downloadBackup() {
                         : "Neuvedeno"
                   }
                 />
+
+                <Info label="Řidičský průkaz" value={selectedCandidate.has_driving_license ? "Ano" : "Ne"} />
+                <Info label="Vlastní auto" value={selectedCandidate.has_own_car ? "Ano" : "Ne"} />
+                <Info label="Konfekční velikost" value={selectedCandidate.clothing_size} />
+                <Info label="Velikost kalhot" value={selectedCandidate.trouser_size} />
+                <Info label="Obvod hlavy" value={selectedCandidate.head_cm ? `${selectedCandidate.head_cm} cm` : null} />
+                <Info label="Jazyky" value={selectedCandidate.languages} />
+                <Info label="Dovednosti" value={selectedCandidate.skills} />
 
                 <Info
                   label="Stav"
