@@ -410,20 +410,8 @@ export default function ProductionDashboard() {
     });
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: "#000",
-        color: "#fff",
-        padding: "30px",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "1400px",
-          margin: "0 auto",
-        }}
-      >
+    <main className="talentDashboard productionDashboard">
+      <div className="talentDashboardInner"><section className="talentHero"><div className="talentHeroFilm">🎞️</div><div className="talentHeroTitle"><strong>LE<span>X</span>APA</strong><b>CASTING</b><small>PRODUKČNÍ DATABÁZE</small></div><div className="talentHeroCamera">🎥</div></section>
         <header
           style={{
             display: "flex",
