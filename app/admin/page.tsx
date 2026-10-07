@@ -1093,7 +1093,7 @@ function downloadBackup() {
                   onClick={() => {
                     setSelectedCandidate(candidate);
                     loadInternal(candidate.id);
-                  }
+                  }}
                   style={{
                     width: "100%",
                     background: "#fff",
