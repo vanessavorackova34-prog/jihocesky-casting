@@ -237,7 +237,9 @@ export default function AdminPage() {
     alert(`Projekt „${name.trim()}“ vytvořen. Přiřazeno kandidátů: ${selectedIds.length}.`);
   }
 
-  async function addSelectionToExistingProject() {\n    if (!supabase || selectedIds.length === 0) return;\n    if (projects.length === 0) { alert("Nejdřív vytvoř projekt."); return; }\n    const menu = projects.map((p,i)=>`${i+1}. ${p.name}`).join("\\n");\n    const answer = window.prompt(`Vyber číslo projektu:\\n${menu}`);\n    if (!answer) return;\n    const project = projects[Number(answer)-1];\n    if (!project) { alert("Neplatný výběr projektu."); return; }\n    const rows = selectedIds.map(candidate_id=>({project_id:project.id,candidate_id}));\n    const { error } = await supabase.from("project_candidates").upsert(rows,{onConflict:"project_id,candidate_id",ignoreDuplicates:true});\n    if (error) { alert("Kandidáty se nepodařilo přidat: "+error.message); return; }\n    alert(`Do projektu „${project.name}“ bylo přidáno ${selectedIds.length} vybraných kandidátů.`);\n  }\n\n  function openBulkSms() {
+  async function addSelectionToExistingProject() {\n    if (!supabase || selectedIds.length === 0) return;\n    if (projects.length === 0) { alert("Nejdřív vytvoř projekt."); return; }\n    const menu = projects.map((p,i)=>`${i+1}. ${p.name}`).join("
+");\n    const answer = window.prompt(`Vyber číslo projektu:
+${menu}`);\n    if (!answer) return;\n    const project = projects[Number(answer)-1];\n    if (!project) { alert("Neplatný výběr projektu."); return; }\n    const rows = selectedIds.map(candidate_id=>({project_id:project.id,candidate_id}));\n    const { error } = await supabase.from("project_candidates").upsert(rows,{onConflict:"project_id,candidate_id",ignoreDuplicates:true});\n    if (error) { alert("Kandidáty se nepodařilo přidat: "+error.message); return; }\n    alert(`Do projektu „${project.name}“ bylo přidáno ${selectedIds.length} vybraných kandidátů.`);\n  }\n\n  function openBulkSms() {
     const selected = candidates.filter(
       (candidate) =>
         selectedIds.includes(candidate.id) &&
