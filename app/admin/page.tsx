@@ -227,9 +227,8 @@ export default function AdminPage() {
 
   async function createProjectFromSelection() {
     if (!supabase || selectedIds.length === 0) return;
-    const name = window.prompt("Název projektu / natáčení:", projectName);
+    const name = window.prompt("Název projektu / natáčení:");
     if (!name?.trim()) return;
-    setProjectName(name.trim());
     const { data: project, error } = await supabase.from("casting_projects").insert({ name: name.trim() }).select("id").single();
     if (error || !project) { alert("Projekt se nepodařilo vytvořit: " + (error?.message || "")); return; }
     const rows = selectedIds.map(candidate_id => ({ project_id: project.id, candidate_id }));
