@@ -811,6 +811,15 @@ function downloadBackup() {
               <option>51+</option>
             </select>
 
+            <select value={photoshootFilter} onChange={(e)=>setPhotoshootFilter(e.target.value)} style={inputStyle}>
+              <option>Všichni</option><option>Ano</option><option>Ne</option>
+            </select>
+            <select value={transportFilter} onChange={(e)=>setTransportFilter(e.target.value)} style={inputStyle}>
+              <option>Všichni</option><option>Řidičák</option><option>Vlastní auto</option>
+            </select>
+            <input type="number" placeholder="Výška od (cm)" value={minHeight} onChange={(e)=>setMinHeight(e.target.value)} style={inputStyle} />
+            <input type="number" placeholder="Výška do (cm)" value={maxHeight} onChange={(e)=>setMaxHeight(e.target.value)} style={inputStyle} />
+
             <select
               value={regionFilter}
               onChange={(e) => {
@@ -916,6 +925,13 @@ function downloadBackup() {
               Žádné registrace v této kategorii.
             </div>
           )}
+
+        {!loading && !error && (
+          <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:20,alignItems:"center"}}>
+            <strong>Zobrazeno: {visibleCandidates.length}</strong>
+            <button type="button" style={actionButton} onClick={()=>setSelectedIds(visibleCandidates.map(c=>c.id))}>Vybrat všechny zobrazené</button>
+          </div>
+        )}
 
         {selectedIds.length > 0 && (
           <div
