@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function Page(){return <main className="section"><div className="card"><div className="eyebrow">LEXAPA CASTING</div><h1>Jak to funguje</h1><p className="muted">1. Vyplníš registrační formulář. 2. Nahraješ své aktuální fotografie a informace. 3. Profil projde kontrolou. 4. Podle požadavků produkce tě můžeme zařadit do vhodného castingu nebo projektu.</p><Link className="btn primary" href="/registrace">Registrovat profil</Link> <Link className="btn" href="/">Zpět</Link></div></main>}
