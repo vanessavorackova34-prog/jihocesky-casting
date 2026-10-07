@@ -446,7 +446,7 @@ export default function ProductionDashboard() {
 
             <p
               style={{
-                color: "#aaa",
+                color: "#786c56",
                 marginTop: "6px",
               }}
             >
@@ -720,13 +720,13 @@ export default function ProductionDashboard() {
 
           <p
             style={{
-              color: "#aaa",
+              color: "#786c56",
               marginBottom: 0,
               marginTop: "18px",
             }}
           >
             Zobrazeno:{" "}
-            <strong style={{ color: "#fff" }}>
+            <strong style={{ color: "#a77a22" }}>
               {filteredCandidates.length}
             </strong>{" "}
             z {candidates.length}
@@ -738,7 +738,7 @@ export default function ProductionDashboard() {
             style={{
               textAlign: "center",
               padding: "50px",
-              color: "#aaa",
+              color: "#786c56",
             }}
           >
             Načítám uchazeče...
@@ -749,7 +749,7 @@ export default function ProductionDashboard() {
             style={{
               textAlign: "center",
               padding: "50px",
-              color: "#aaa",
+              color: "#786c56",
             }}
           >
             Žádní uchazeči neodpovídají
@@ -788,7 +788,7 @@ export default function ProductionDashboard() {
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.85)",
+            background: "rgba(50,38,18,0.62)",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -1246,7 +1246,7 @@ function CandidateCard({
             fontWeight: "bold",
           }}
         >
-          Zobrazit detail →
+          <span style={{color:"#a77a22"}}>Zobrazit detail →</span>
         </p>
       </div>
     </div>
@@ -1331,7 +1331,7 @@ const buttonStyle = {
 
 const cardText = {
   margin: "4px 0",
-  color: "#aaa",
+  color: "#786c56",
 };
 
 const photoSkeletonStyle = {
