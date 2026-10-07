@@ -59,6 +59,7 @@ export default function AdminPage() {
   const [selectedCandidate, setSelectedCandidate] =
     useState<Candidate | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [internalData, setInternalData] = useState<{favorite:boolean;verified:boolean;internal_note:string;photo_status:string}>({favorite:false,verified:false,internal_note:"",photo_status:""});
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -254,6 +255,29 @@ export default function AdminPage() {
 
     window.location.href =
       `sms:${phones.join(",")}?&body=${encodeURIComponent(message.trim())}`;
+  }
+
+  async function loadInternal(candidateId: string) {
+    if (!supabase) return;
+    const { data } = await supabase.from("candidate_internal").select("*").eq("candidate_id", candidateId).maybeSingle();
+    setInternalData({
+      favorite: data?.favorite ?? false,
+      verified: data?.verified ?? false,
+      internal_note: data?.internal_note ?? "",
+      photo_status: data?.photo_status ?? "",
+    });
+  }
+
+  async function saveInternal(candidateId: string, patch: Partial<typeof internalData>) {
+    if (!supabase) return;
+    const next = { ...internalData, ...patch };
+    setInternalData(next);
+    const { error } = await supabase.from("candidate_internal").upsert({
+      candidate_id: candidateId,
+      ...next,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) alert("Interní údaje se nepodařilo uložit: " + error.message);
   }
 
   async function changeStatus(
@@ -996,8 +1020,9 @@ function downloadBackup() {
                 </div>
 
                 <button
-                  onClick={() =>
-                    setSelectedCandidate(candidate)
+                  onClick={() => {
+                    setSelectedCandidate(candidate);
+                    loadInternal(candidate.id);
                   }
                   style={{
                     width: "100%",
@@ -1226,6 +1251,18 @@ function downloadBackup() {
                   }
                 />
               </div>
+
+              <section style={{ background:"#181818", padding:15, borderRadius:8, marginBottom:18 }}>
+                <h3 style={{marginTop:0}}>Interní údaje LEXAPA CASTING</h3>
+                <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:12}}>
+                  <button type="button" style={actionButton} onClick={() => saveInternal(selectedCandidate.id,{favorite:!internalData.favorite})}>{internalData.favorite ? "⭐ Oblíbený" : "☆ Přidat do oblíbených"}</button>
+                  <button type="button" style={actionButton} onClick={() => saveInternal(selectedCandidate.id,{verified:!internalData.verified})}>{internalData.verified ? "✅ Ověřený talent" : "Označit jako ověřený"}</button>
+                </div>
+                <select value={internalData.photo_status} onChange={e=>saveInternal(selectedCandidate.id,{photo_status:e.target.value})} style={{...inputStyle,marginBottom:12}}>
+                  <option value="">Stav fotografií</option><option value="professional">Profesionální</option><option value="standard">Běžné</option><option value="needs_update">Potřebuje nové fotografie</option>
+                </select>
+                <textarea value={internalData.internal_note} onChange={e=>setInternalData({...internalData,internal_note:e.target.value})} onBlur={()=>saveInternal(selectedCandidate.id,{internal_note:internalData.internal_note})} placeholder="Interní poznámka – kandidát ani produkce ji neuvidí" style={{...inputStyle,minHeight:90}} />
+              </section>
 
               <div
                 style={{
