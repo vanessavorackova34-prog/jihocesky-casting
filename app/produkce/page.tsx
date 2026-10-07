@@ -53,22 +53,8 @@ export default function ProdukcePrihlaseniPage() {
   }
 
   return (
-    <main
-      style={{
-        maxWidth: "600px",
-        margin: "0 auto",
-        padding: "60px 20px",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      <div
-        style={{
-          border: "1px solid #ddd",
-          borderRadius: "16px",
-          padding: "30px",
-        }}
-      >
-        <p>PRO PRODUKCE</p>
+    <main className="organizerLogin productionLogin"><div className="card organizerLoginCard">
+        <div className="eyebrow">PRO PRODUKCE</div>
 
         <h1>Přihlášení</h1>
 
@@ -78,53 +64,22 @@ export default function ProdukcePrihlaseniPage() {
           </p>
         )}
 
-        <form
-          onSubmit={login}
-          style={{
-            display: "grid",
-            gap: "16px",
-          }}
-        >
-          <label>
-            E-mail
-            <input
+        <form onSubmit={login}>
+          <div className="field"><label>E-mail</label><input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              style={{
-                width: "100%",
-                padding: "12px",
-                marginTop: "6px",
-                boxSizing: "border-box",
-              }}
-            />
-          </label>
+              /></div>
 
-          <label>
-            Heslo
-            <input
+          <div className="field"><label>Heslo</label><input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              style={{
-                width: "100%",
-                padding: "12px",
-                marginTop: "6px",
-                boxSizing: "border-box",
-              }}
-            />
-          </label>
+              /></div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              padding: "14px",
-              cursor: loading ? "default" : "pointer",
-            }}
-          >
+          <button className="btn primary" type="submit" disabled={loading}>
             {loading ? "Přihlašuji..." : "Přihlásit se"}
           </button>
         </form>
