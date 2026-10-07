@@ -359,3 +359,20 @@ linear-gradient(180deg,#080a0c 0%,#0d0e10 100%);color:#f5f1e7}
 .eyebrow{color:#d8a64a;letter-spacing:3px}
 .muted{color:#bbb5aa}
 footer{border-color:#4a3920}
+
+
+/* Public cinematic hero artwork */
+.publicCinemaHero{min-height:650px;position:relative;overflow:hidden;align-items:center}
+.publicCinemaHero:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(7,8,10,.18) 0%,rgba(7,8,10,.05) 48%,rgba(7,8,10,.2) 100%);pointer-events:none}
+.publicHeroCopy{position:relative;z-index:3;max-width:680px}
+.cinemaArtwork{position:relative;min-height:480px;border-radius:30px;overflow:hidden;border:1px solid #5e4722;background:
+radial-gradient(circle at 70% 28%,rgba(232,183,78,.28),transparent 24%),
+linear-gradient(145deg,#17191b 0%,#090a0c 55%,#151109 100%);box-shadow:0 30px 80px rgba(0,0,0,.5);z-index:2}
+.cinemaArtwork:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(105deg,transparent 0 65px,rgba(218,169,73,.035) 66px 68px);opacity:.8}
+.cameraShape{position:absolute;right:12%;top:15%;font-size:150px;filter:grayscale(1) sepia(.55) drop-shadow(0 20px 30px #000);opacity:.72}
+.filmFrame{position:absolute;width:330px;height:88px;border:5px solid rgba(205,158,65,.62);transform:rotate(-11deg);left:-35px;bottom:92px;box-shadow:0 0 28px rgba(215,168,70,.16)}
+.filmFrame:before,.filmFrame:after{content:"";position:absolute;left:8px;right:8px;height:8px;background:repeating-linear-gradient(90deg,#b98937 0 12px,transparent 12px 23px)}
+.filmFrame:before{top:6px}.filmFrame:after{bottom:6px}.filmTwo{left:210px;bottom:42px;transform:rotate(-7deg);opacity:.55}
+.goldBeam{position:absolute;left:-10%;right:-10%;bottom:28%;height:3px;background:linear-gradient(90deg,transparent,#d8a64a,#fff0b2,#d8a64a,transparent);box-shadow:0 0 22px #d8a64a;transform:rotate(-4deg)}
+.artLabel{position:absolute;right:28px;bottom:28px;color:#d9b05c;font-size:12px;font-weight:800;letter-spacing:4px}
+@media(max-width:850px){.publicCinemaHero{min-height:auto}.cinemaArtwork{min-height:300px}.cameraShape{font-size:100px}.filmFrame{width:250px}}
