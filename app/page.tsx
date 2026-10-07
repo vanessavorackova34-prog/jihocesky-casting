@@ -9,9 +9,9 @@ export default function Home() {
         </div>
 
         <nav className="nav">
-          <a href="#casting">O castingu</a>
-          <a href="#jak">Jak to funguje</a>
-          <a href="#kontakt">Kontakt</a>
+          <Link href="/o-castingu">O castingu</Link>
+          <Link href="/jak-to-funguje">Jak to funguje</Link>
+          <Link href="/kontakt">Kontakt</Link>
         </nav>
 
         <Link className="btn" href="/prihlaseni">
@@ -80,7 +80,7 @@ export default function Home() {
 
           <div className="stat">
             <b>📍</b>
-            <small>Jihočeský kraj</small>
+            <small>Celá Česká republika</small>
           </div>
         </section>
 
