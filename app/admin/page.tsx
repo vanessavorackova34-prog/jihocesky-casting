@@ -50,6 +50,7 @@ export default function AdminPage() {
 
   const [selectedCandidate, setSelectedCandidate] =
     useState<Candidate | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -208,6 +209,43 @@ export default function AdminPage() {
     await Promise.all(
       Array.from({ length: 4 }, () => worker())
     );
+  }
+
+  function openBulkSms() {
+    const selected = candidates.filter(
+      (candidate) =>
+        selectedIds.includes(candidate.id) &&
+        candidate.phone?.trim()
+    );
+
+    if (selected.length === 0) {
+      alert("Vyber alespoň jednoho člověka s telefonním číslem.");
+      return;
+    }
+
+    const filmingName = window.prompt(
+      "Název natáčení / projektu:",
+      ""
+    );
+    if (!filmingName?.trim()) return;
+
+    const defaultMessage =
+      `Dobrý den, byli jste vybráni na natáčení „${filmingName.trim()}“. Další informace k natáčení Vám zašleme. LEXAPA CASTING`;
+
+    const message = window.prompt(
+      `Text SMS pro ${selected.length} vybraných lidí (můžete jej upravit):`,
+      defaultMessage
+    );
+    if (!message?.trim()) return;
+
+    const phones = selected
+      .map((candidate) =>
+        candidate.phone!.replace(/[^+\d]/g, "")
+      )
+      .filter(Boolean);
+
+    window.location.href =
+      `sms:${phones.join(",")}?&body=${encodeURIComponent(message.trim())}`;
   }
 
   async function changeStatus(
@@ -810,6 +848,30 @@ function downloadBackup() {
             </div>
           )}
 
+        {selectedIds.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              alignItems: "center",
+              flexWrap: "wrap",
+              padding: 15,
+              marginBottom: 20,
+              background: "#111",
+              border: "1px solid #333",
+              borderRadius: 10,
+            }}
+          >
+            <strong>Vybráno: {selectedIds.length}</strong>
+            <button type="button" onClick={openBulkSms} style={actionButton}>
+              📱 Hromadná SMS
+            </button>
+            <button type="button" onClick={() => setSelectedIds([])} style={actionButton}>
+              Zrušit výběr
+            </button>
+          </div>
+        )}
+
         <div
           style={{
             display: "grid",
@@ -868,6 +930,29 @@ function downloadBackup() {
               )}
 
               <div style={{ padding: 20 }}>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 12,
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(candidate.id)}
+                    onChange={(e) =>
+                      setSelectedIds((current) =>
+                        e.target.checked
+                          ? Array.from(new Set([...current, candidate.id]))
+                          : current.filter((id) => id !== candidate.id)
+                      )
+                    }
+                  />
+                  Vybrat pro hromadnou SMS
+                </label>
+
                 <h2
                   style={{
                     margin: "0 0 8px",
