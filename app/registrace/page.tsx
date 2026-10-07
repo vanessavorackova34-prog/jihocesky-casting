@@ -199,6 +199,13 @@ export default function Registration() {
         hips_cm: f.get("hips_cm") ? Number(f.get("hips_cm")) : null,
         inseam_cm: f.get("inseam_cm") ? Number(f.get("inseam_cm")) : null,
         shoe_size: f.get("shoe_size") ? Number(f.get("shoe_size")) : null,
+        has_driving_license: f.get("has_driving_license") === "yes",
+        has_own_car: f.get("has_own_car") === "yes",
+        clothing_size: f.get("clothing_size") || null,
+        trouser_size: f.get("trouser_size") || null,
+        head_cm: f.get("head_cm") ? Number(f.get("head_cm")) : null,
+        languages: f.get("languages") || null,
+        skills: f.get("skills") || null,
         experience: f.get("experience"),
         availability: f.get("availability"),
         professional_photoshoot_interest:
@@ -509,6 +516,20 @@ export default function Registration() {
                 <label>Velikost bot (EU)</label>
                 <input name="shoe_size" type="number" min="15" max="55" step="0.5" />
               </div>
+
+              <div className="field">
+                <label>Řidičský průkaz</label>
+                <select name="has_driving_license" defaultValue="no"><option value="no">Ne</option><option value="yes">Ano</option></select>
+              </div>
+              <div className="field">
+                <label>Vlastní auto</label>
+                <select name="has_own_car" defaultValue="no"><option value="no">Ne</option><option value="yes">Ano</option></select>
+              </div>
+              <div className="field"><label>Konfekční velikost</label><input name="clothing_size" placeholder="např. M / 38" /></div>
+              <div className="field"><label>Velikost kalhot</label><input name="trouser_size" placeholder="např. 32 / 40" /></div>
+              <div className="field"><label>Obvod hlavy (cm)</label><input name="head_cm" type="number" min="30" max="80" step="0.5" /></div>
+              <div className="field full"><label>Jazyky</label><input name="languages" placeholder="např. angličtina, němčina, italština" /></div>
+              <div className="field full"><label>Dovednosti</label><textarea name="skills" placeholder="Např. jízda na koni, tanec, zpěv, plavání, bojové sporty, hudební nástroje..." /></div>
 
               <div className="field full">
                 <label>Zkušenosti</label>
