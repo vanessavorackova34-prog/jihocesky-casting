@@ -21,6 +21,11 @@ type Candidate = {
   email: string;
   role: string;
   height_cm: number | null;
+  chest_cm: number | null;
+  waist_cm: number | null;
+  hips_cm: number | null;
+  inseam_cm: number | null;
+  shoe_size: number | null;
   experience: string;
   availability: string;
   photo_paths: string[] | null;
@@ -47,6 +52,11 @@ export default function MojeRegistrace() {
     email: "",
     role: "",
     height_cm: "",
+    chest_cm: "",
+    waist_cm: "",
+    hips_cm: "",
+    inseam_cm: "",
+    shoe_size: "",
     experience: "",
     availability: "",
   });
@@ -112,6 +122,11 @@ export default function MojeRegistrace() {
           item.height_cm !== undefined
             ? String(item.height_cm)
             : "",
+        chest_cm: item.chest_cm != null ? String(item.chest_cm) : "",
+        waist_cm: item.waist_cm != null ? String(item.waist_cm) : "",
+        hips_cm: item.hips_cm != null ? String(item.hips_cm) : "",
+        inseam_cm: item.inseam_cm != null ? String(item.inseam_cm) : "",
+        shoe_size: item.shoe_size != null ? String(item.shoe_size) : "",
         experience: item.experience || "",
         availability: item.availability || "",
       });
@@ -167,6 +182,11 @@ export default function MojeRegistrace() {
             height_cm: form.height_cm
               ? Number(form.height_cm)
               : null,
+            chest_cm: form.chest_cm ? Number(form.chest_cm) : null,
+            waist_cm: form.waist_cm ? Number(form.waist_cm) : null,
+            hips_cm: form.hips_cm ? Number(form.hips_cm) : null,
+            inseam_cm: form.inseam_cm ? Number(form.inseam_cm) : null,
+            shoe_size: form.shoe_size ? Number(form.shoe_size) : null,
             experience: form.experience,
             availability: form.availability,
             photo_paths: photos,
@@ -576,6 +596,24 @@ export default function MojeRegistrace() {
                 }
               />
             </div>
+
+            {[
+              ["chest_cm", "Obvod hrudníku (cm)"],
+              ["waist_cm", "Obvod pasu (cm)"],
+              ["hips_cm", "Obvod boků (cm)"],
+              ["inseam_cm", "Vnitřní délka nohy (cm)"],
+              ["shoe_size", "Velikost bot (EU)"],
+            ].map(([field, label]) => (
+              <div className="field" key={field}>
+                <label>{label}</label>
+                <input
+                  type="number"
+                  step={field === "shoe_size" ? "0.5" : "1"}
+                  value={form[field as keyof typeof form]}
+                  onChange={(e) => updateField(field, e.target.value)}
+                />
+              </div>
+            ))}
 
             <div className="field full">
               <label>Zkušenosti</label>
