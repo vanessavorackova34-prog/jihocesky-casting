@@ -332,3 +332,11 @@ footer{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}footer strong
 .organizerLoginCard .field label{color:#8a6a2b;font-weight:700}.organizerLoginCard .field input{background:#fffdf9;color:#241d12;border:1px solid #d8c69e;border-radius:10px}.organizerLoginCard .field input:focus{outline:2px solid rgba(201,162,79,.22);border-color:#b88b31}
 .organizerLoginCard .primary{width:100%;margin-top:8px;padding:13px}
 @media(max-width:520px){.organizerLoginCard{padding:26px 20px;border-radius:18px}.organizerLoginCard h1{font-size:29px}}
+
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+.infoSection{padding-top:72px;padding-bottom:40px}
+.infoGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.infoCard{background:linear-gradient(145deg,#17191d,#0f1114);border:1px solid #3b3326;border-radius:18px;padding:28px;box-shadow:0 14px 40px rgba(0,0,0,.16)}
+.infoCard h3{margin:0 0 12px;color:#e0b354;font-size:20px}
+.infoCard p{margin:0;color:#aeb1b8;line-height:1.65}
+@media(max-width:850px){.infoGrid{grid-template-columns:1fr}.infoSection{padding-top:50px}}
