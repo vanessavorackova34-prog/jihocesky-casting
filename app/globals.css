@@ -376,3 +376,15 @@ linear-gradient(145deg,#17191b 0%,#090a0c 55%,#151109 100%);box-shadow:0 30px 80
 .goldBeam{position:absolute;left:-10%;right:-10%;bottom:28%;height:3px;background:linear-gradient(90deg,transparent,#d8a64a,#fff0b2,#d8a64a,transparent);box-shadow:0 0 22px #d8a64a;transform:rotate(-4deg)}
 .artLabel{position:absolute;right:28px;bottom:28px;color:#d9b05c;font-size:12px;font-weight:800;letter-spacing:4px}
 @media(max-width:850px){.publicCinemaHero{min-height:auto}.cinemaArtwork{min-height:300px}.cameraShape{font-size:100px}.filmFrame{width:250px}}
+
+
+/* Larger organizer login */
+.organizerLogin{min-height:calc(100vh - 78px);display:grid;place-items:center;padding:48px 24px}
+.organizerLoginCard{width:min(720px,94vw)!important;max-width:720px!important;margin:auto!important;padding:52px!important;border-radius:26px!important;border:1px solid #a77b30!important;box-shadow:0 30px 90px rgba(0,0,0,.42),0 0 45px rgba(197,145,48,.10)!important}
+.organizerLoginCard h1{font-size:clamp(38px,5vw,58px);margin:10px 0 30px}
+.organizerLoginCard .eyebrow{font-size:15px;letter-spacing:4px}
+.organizerLoginCard .field{margin-bottom:22px}
+.organizerLoginCard .field label{font-size:16px;margin-bottom:9px;display:block}
+.organizerLoginCard .field input{height:64px;font-size:19px;border-radius:13px;padding:0 18px}
+.organizerLoginCard .primary{width:100%;min-height:62px;font-size:19px;font-weight:800;margin-top:8px}
+@media(max-width:650px){.organizerLoginCard{padding:30px 22px!important}.organizerLoginCard .field input{height:58px}}
