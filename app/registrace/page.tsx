@@ -193,9 +193,12 @@ export default function Registration() {
         phone: f.get("phone"),
         email: f.get("email"),
         role: f.get("role"),
-        height_cm: f.get("height_cm")
-          ? Number(f.get("height_cm"))
-          : null,
+        height_cm: f.get("height_cm") ? Number(f.get("height_cm")) : null,
+        chest_cm: f.get("chest_cm") ? Number(f.get("chest_cm")) : null,
+        waist_cm: f.get("waist_cm") ? Number(f.get("waist_cm")) : null,
+        hips_cm: f.get("hips_cm") ? Number(f.get("hips_cm")) : null,
+        inseam_cm: f.get("inseam_cm") ? Number(f.get("inseam_cm")) : null,
+        shoe_size: f.get("shoe_size") ? Number(f.get("shoe_size")) : null,
         experience: f.get("experience"),
         availability: f.get("availability"),
         photo_paths: [],
@@ -474,6 +477,31 @@ export default function Registration() {
                   name="height_cm"
                   type="number"
                 />
+              </div>
+
+              <div className="field">
+                <label>Obvod hrudníku (cm)</label>
+                <input name="chest_cm" type="number" min="30" max="200" />
+              </div>
+
+              <div className="field">
+                <label>Obvod pasu (cm)</label>
+                <input name="waist_cm" type="number" min="30" max="200" />
+              </div>
+
+              <div className="field">
+                <label>Obvod boků (cm)</label>
+                <input name="hips_cm" type="number" min="30" max="200" />
+              </div>
+
+              <div className="field">
+                <label>Vnitřní délka nohy (cm)</label>
+                <input name="inseam_cm" type="number" min="20" max="140" />
+              </div>
+
+              <div className="field">
+                <label>Velikost bot (EU)</label>
+                <input name="shoe_size" type="number" min="15" max="55" step="0.5" />
               </div>
 
               <div className="field full">
