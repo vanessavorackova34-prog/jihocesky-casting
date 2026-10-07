@@ -127,6 +127,7 @@ export default function ProductionDashboard() {
 
   const [selectedCandidate, setSelectedCandidate] =
     useState<Candidate | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
 
@@ -213,6 +214,43 @@ export default function ProductionDashboard() {
       );
 
     setPhotos(photoUrls);
+  }
+
+  function toggleCandidate(id: string) {
+    setSelectedIds((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id]
+    );
+  }
+
+  function openBulkSms() {
+    const selected = candidates.filter(
+      (candidate) =>
+        selectedIds.includes(candidate.id) &&
+        candidate.phone?.trim()
+    );
+
+    if (selected.length === 0) {
+      alert("Vyber alespoň jednoho člověka s telefonním číslem.");
+      return;
+    }
+
+    const message = window.prompt(
+      `Text SMS pro ${selected.length} vybraných lidí:`,
+      "Dobrý den, byli jste vybráni na natáčení. Podrobnosti Vám zašleme v této zprávě."
+    );
+
+    if (!message) return;
+
+    const phones = selected
+      .map((candidate) =>
+        candidate.phone!.replace(/[^+\d]/g, "")
+      )
+      .filter(Boolean);
+
+    window.location.href =
+      `sms:${phones.join(",")}?&body=${encodeURIComponent(message)}`;
   }
 
   async function logout() {
@@ -729,6 +767,48 @@ export default function ProductionDashboard() {
           </p>
         </section>
 
+        {!loading && candidates.length > 0 && (
+          <section
+            style={{
+              background: "#111",
+              border: "1px solid #292929",
+              padding: "16px 20px",
+              borderRadius: "15px",
+              marginBottom: "20px",
+              display: "flex",
+              gap: "12px",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+            }}
+          >
+            <div>
+              Vybráno pro hromadnou SMS:{" "}
+              <strong>{selectedIds.length}</strong>
+            </div>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+              {selectedIds.length > 0 && (
+                <button
+                  onClick={() => setSelectedIds([])}
+                  style={buttonStyle}
+                >
+                  Zrušit výběr
+                </button>
+              )}
+              <button
+                onClick={openBulkSms}
+                disabled={selectedIds.length === 0}
+                style={{
+                  ...buttonStyle,
+                  opacity: selectedIds.length === 0 ? 0.5 : 1,
+                }}
+              >
+                📱 Hromadná SMS
+              </button>
+            </div>
+          </section>
+        )}
+
         {loading ? (
           <div
             style={{
@@ -766,6 +846,8 @@ export default function ProductionDashboard() {
                   key={candidate.id}
                   candidate={candidate}
                   priority={index < 4}
+                  selected={selectedIds.includes(candidate.id)}
+                  onToggle={() => toggleCandidate(candidate.id)}
                   onClick={() =>
                     openCandidate(candidate)
                   }
@@ -1041,10 +1123,14 @@ function DetailPhoto({
 function CandidateCard({
   candidate,
   onClick,
+  onToggle,
+  selected,
   priority,
 }: {
   candidate: Candidate;
   onClick: () => void;
+  onToggle: () => void;
+  selected: boolean;
   priority: boolean;
 }) {
   const [photo, setPhoto] = useState("");
@@ -1145,6 +1231,7 @@ function CandidateCard({
     <div
       onClick={onClick}
       style={{
+        position: "relative",
         background: "#111",
         border: "1px solid #292929",
         borderRadius: "15px",
@@ -1152,6 +1239,31 @@ function CandidateCard({
         cursor: "pointer",
       }}
     >
+      <label
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          position: "absolute",
+          top: "12px",
+          left: "12px",
+          zIndex: 5,
+          background: "rgba(0,0,0,0.78)",
+          color: "#fff",
+          padding: "8px 10px",
+          borderRadius: "8px",
+          display: "flex",
+          alignItems: "center",
+          gap: "7px",
+          cursor: "pointer",
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggle}
+        />
+        Vybrat
+      </label>
+
       {photo ? (
         <img
           src={photo}
