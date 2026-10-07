@@ -671,6 +671,15 @@ function downloadBackup() {
             </p>
           </div>
 <button
+  onClick={() => router.push("/admin/projekty")}
+  style={{
+    background: "#222", color: "#fff", border: "1px solid #555",
+    borderRadius: 8, padding: "12px 20px", fontWeight: 600, cursor: "pointer",
+  }}
+>
+  🎬 Projekty
+</button>
+<button
   onClick={downloadBackup}
   style={{
     background: "#222",
