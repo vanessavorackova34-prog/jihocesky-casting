@@ -27,3 +27,5 @@ Kompletní základ webové castingové aplikace připravený pro Vercel + Supaba
 Fotografie jsou připravené jako další krok přes Supabase Storage. Pro ostrý provoz s osobními údaji je nutné doplnit zásady ochrany osobních údajů, souhlasy a vhodně omezit přístup k citlivým údajům.
 
 Aktualizace 4. 9. 2026
+
+<!-- deployment refresh 2026-10-07 -->
