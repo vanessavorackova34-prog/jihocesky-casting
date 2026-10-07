@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 
-type Project={id:string;name:string;filming_date:string|null;location:string|null;notes:string|null;status:string;created_at:string};
+type Project={id:string;name:string;filming_date:string|null;location:string|null;notes:string|null;meeting_time:string|null;fee:string|null;role_notes:string|null;status:string;created_at:string};
 type Assignment={project_id:string;candidate_id:string;casting_status:string;attendance_status:string;note:string|null;candidates?:{first_name:string;last_name:string;phone:string|null;email:string|null}|null};
 
 export default function ProjectsPage(){
@@ -37,6 +37,13 @@ export default function ProjectsPage(){
   if(!message?.trim())return;
   window.location.href=`sms:${phones.join(",")}?&body=${encodeURIComponent(message.trim())}`;
  }
+ async function saveProjectDetails(){
+  if(!supabase||!active)return;
+  const {error}=await supabase.from("casting_projects").update({filming_date:active.filming_date||null,location:active.location||null,meeting_time:active.meeting_time||null,fee:active.fee||null,role_notes:active.role_notes||null,notes:active.notes||null}).eq("id",active.id);
+  if(error){alert("Údaje se nepodařilo uložit: "+error.message);return}
+  setProjects(cur=>cur.map(p=>p.id===active.id?active:p));
+  alert("Údaje projektu byly uloženy.");
+ }
  async function setStatus(a:Assignment,field:"casting_status"|"attendance_status",value:string){
   if(!supabase)return;
   await supabase.from("project_candidates").update({[field]:value}).eq("project_id",a.project_id).eq("candidate_id",a.candidate_id);
@@ -54,6 +61,15 @@ export default function ProjectsPage(){
    </div>}
    {active&&<section style={{...card,marginTop:24}}>
     <h2>{active.name}</h2>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))",gap:10,marginBottom:14}}>
+      <label>Datum natáčení<input type="date" value={active.filming_date||""} onChange={e=>setActive({...active,filming_date:e.target.value||null})} style={{...input,width:"100%",boxSizing:"border-box",marginTop:5}} /></label>
+      <label>Lokace<input value={active.location||""} onChange={e=>setActive({...active,location:e.target.value})} placeholder="Místo natáčení" style={{...input,width:"100%",boxSizing:"border-box",marginTop:5}} /></label>
+      <label>Čas srazu<input type="time" value={active.meeting_time?.slice(0,5)||""} onChange={e=>setActive({...active,meeting_time:e.target.value||null})} style={{...input,width:"100%",boxSizing:"border-box",marginTop:5}} /></label>
+      <label>Honorář<input value={active.fee||""} onChange={e=>setActive({...active,fee:e.target.value})} placeholder="např. 2 000 Kč / den" style={{...input,width:"100%",boxSizing:"border-box",marginTop:5}} /></label>
+    </div>
+    <label style={{display:"block",marginBottom:10}}>Poznámky k roli<textarea value={active.role_notes||""} onChange={e=>setActive({...active,role_notes:e.target.value})} placeholder="Role, kostým, požadavky…" style={{...input,width:"100%",boxSizing:"border-box",minHeight:70,display:"block",marginTop:5}} /></label>
+    <label style={{display:"block",marginBottom:10}}>Interní poznámky projektu<textarea value={active.notes||""} onChange={e=>setActive({...active,notes:e.target.value})} placeholder="Interní organizační poznámky…" style={{...input,width:"100%",boxSizing:"border-box",minHeight:70,display:"block",marginTop:5}} /></label>
+    <button style={btn} onClick={saveProjectDetails}>💾 Uložit údaje projektu</button>
     <p>Shortlist: <strong>{people.length}</strong> • Vybraní: <strong>{people.filter(x=>x.casting_status==="selected").length}</strong> • Potvrzení: <strong>{people.filter(x=>x.attendance_status==="confirmed").length}</strong></p>
     <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
       <button style={btn} onClick={()=>smsPeople(people,"celý projekt")}>📱 SMS všem</button>
