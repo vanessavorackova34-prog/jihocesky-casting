@@ -22,6 +22,7 @@ type Candidate = {
   height_centimetres: number | null;
   experience: string | null;
   availability: string | null;
+  professional_photoshoot_interest: boolean | null;
   status: string | null;
   gender: string | null;
   photo_paths?: string[] | null;
@@ -1189,6 +1190,17 @@ function downloadBackup() {
                   label="Dostupnost"
                   value={
                     selectedCandidate.availability
+                  }
+                />
+
+                <Info
+                  label="Zájem o profesionální přefocení za 600 Kč"
+                  value={
+                    selectedCandidate.professional_photoshoot_interest === true
+                      ? "Ano"
+                      : selectedCandidate.professional_photoshoot_interest === false
+                        ? "Ne"
+                        : "Neuvedeno"
                   }
                 />
 
