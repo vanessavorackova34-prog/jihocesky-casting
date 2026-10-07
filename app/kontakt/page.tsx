@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function Page(){return <main className="section"><div className="card"><div className="eyebrow">LEXAPA CASTING</div><h1>Kontakt</h1><p className="muted"><strong>Jednatel:</strong> Patrik Lexa</p><p className="muted"><strong>Telefon:</strong> +420 773 164 124</p><p className="muted"><strong>E-mail:</strong> lexapacasting@seznam.cz</p><p className="muted">České Budějovice • působnost po celé České republice</p><Link className="btn primary" href="/">← Zpět na hlavní stránku</Link></div></main>}
