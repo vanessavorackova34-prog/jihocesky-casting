@@ -30,6 +30,13 @@ export default function ProjectsPage(){
   const {data}=await supabase.from("project_candidates").select("*, candidates(first_name,last_name,phone,email)").eq("project_id",p.id);
   setPeople((data as Assignment[])||[]);
  }
+ function smsPeople(list: Assignment[], label: string){
+  const phones=list.map(a=>a.candidates?.phone?.replace(/[^+\d]/g,"")).filter(Boolean) as string[];
+  if(!phones.length){alert("V této skupině není žádné telefonní číslo.");return}
+  const message=window.prompt(`Text SMS – ${label} (${phones.length} lidí):`, active ? `Dobrý den, informace k natáčení „${active.name}“. LEXAPA CASTING` : "LEXAPA CASTING");
+  if(!message?.trim())return;
+  window.location.href=`sms:${phones.join(",")}?&body=${encodeURIComponent(message.trim())}`;
+ }
  async function setStatus(a:Assignment,field:"casting_status"|"attendance_status",value:string){
   if(!supabase)return;
   await supabase.from("project_candidates").update({[field]:value}).eq("project_id",a.project_id).eq("candidate_id",a.candidate_id);
@@ -46,7 +53,13 @@ export default function ProjectsPage(){
     {projects.map(p=><button key={p.id} onClick={()=>openProject(p)} style={{...card,textAlign:"left",cursor:"pointer"}}><strong>{p.name}</strong><div style={{color:"#aaa",marginTop:8}}>{p.filming_date||"Datum neuvedeno"} {p.location?(" • "+p.location):""}</div></button>)}
    </div>}
    {active&&<section style={{...card,marginTop:24}}>
-    <h2>{active.name}</h2><p>Shortlist: <strong>{people.length}</strong></p>
+    <h2>{active.name}</h2>
+    <p>Shortlist: <strong>{people.length}</strong> • Vybraní: <strong>{people.filter(x=>x.casting_status==="selected").length}</strong> • Potvrzení: <strong>{people.filter(x=>x.attendance_status==="confirmed").length}</strong></p>
+    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
+      <button style={btn} onClick={()=>smsPeople(people,"celý projekt")}>📱 SMS všem</button>
+      <button style={btn} onClick={()=>smsPeople(people.filter(x=>x.casting_status==="selected"),"vybraní")}>📱 SMS vybraným</button>
+      <button style={btn} onClick={()=>smsPeople(people.filter(x=>x.attendance_status==="pending"),"čekající na potvrzení")}>📱 SMS čekajícím</button>
+    </div>
     <div style={{display:"grid",gap:10}}>
      {people.map(a=><div key={a.candidate_id} style={{background:"#181818",padding:14,borderRadius:10,display:"flex",gap:12,alignItems:"center",justifyContent:"space-between",flexWrap:"wrap"}}>
       <div><strong>{a.candidates?.first_name} {a.candidates?.last_name}</strong><div style={{color:"#aaa",fontSize:13}}>{a.candidates?.phone||""} {a.candidates?.email||""}</div></div>
