@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createBrowserClient } from "@supabase/ssr";
 
 export default function ProdukcePrihlaseniPage() {
@@ -53,7 +54,13 @@ export default function ProdukcePrihlaseniPage() {
   }
 
   return (
-    <main className="organizerLogin productionLogin"><div className="card organizerLoginCard">
+    <>
+      <header className="top">
+        <div className="logo">🎬 <span>LEXAPA CASTING</span></div>
+        <Link className="btn" href="/">Zpět</Link>
+      </header>
+      <main className="organizerLogin">
+        <div className="card" style={{ maxWidth: 500, margin: "auto" }}>
         <div className="eyebrow">PRO PRODUKCE</div>
 
         <h1>Přihlášení</h1>
@@ -84,6 +91,7 @@ export default function ProdukcePrihlaseniPage() {
           </button>
         </form>
       </div>
-    </main>
+      </main>
+    </>
   );
 }
