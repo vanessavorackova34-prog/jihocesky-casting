@@ -340,3 +340,22 @@ html{scroll-behavior:smooth;scroll-padding-top:90px}
 .infoCard h3{margin:0 0 12px;color:#e0b354;font-size:20px}
 .infoCard p{margin:0;color:#aeb1b8;line-height:1.65}
 @media(max-width:850px){.infoGrid{grid-template-columns:1fr}.infoSection{padding-top:50px}}
+
+
+/* LEXAPA cinematic database theme */
+body{background:
+radial-gradient(circle at 18% 0%,rgba(197,145,48,.12),transparent 28%),
+radial-gradient(circle at 88% 18%,rgba(197,145,48,.08),transparent 24%),
+linear-gradient(180deg,#080a0c 0%,#0d0e10 100%);color:#f5f1e7}
+.top,.adminbar{background:rgba(8,9,10,.94);border-color:#6f5425;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.logo span,.gold{background:linear-gradient(90deg,#f1d184,#c28b2e,#f1d184);-webkit-background-clip:text;background-clip:text;color:transparent}
+.card,.stat,.table,.step,.infoCard,.heroPanel{background:linear-gradient(145deg,rgba(24,25,27,.98),rgba(10,11,13,.98));border-color:#5c4623;box-shadow:0 18px 48px rgba(0,0,0,.28)}
+.btn{border-color:#c89b43;color:#e8c36f}.btn:hover{border-color:#f0cf82;box-shadow:0 8px 28px rgba(202,157,68,.18)}
+.primary{background:linear-gradient(135deg,#9b6b1f,#e4bb62,#a87928);color:#100d08;box-shadow:0 8px 24px rgba(198,145,49,.22)}
+.field input,.field select,.field textarea,.tools input,.tools select{background:#111214;color:#f7f1e5;border-color:#554527}
+.field input:focus,.field select:focus,.field textarea:focus,.tools input:focus,.tools select:focus{outline:1px solid #d4aa55;border-color:#d4aa55}
+.avatar{background:linear-gradient(145deg,#2a2418,#151515);border:1px solid #8b692e;color:#efc86f}
+.row{border-color:#332a1d}.head{background:#17140f;color:#d3b574}
+.eyebrow{color:#d8a64a;letter-spacing:3px}
+.muted{color:#bbb5aa}
+footer{border-color:#4a3920}
