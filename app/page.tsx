@@ -20,7 +20,7 @@ export default function Home() {
       </header>
 
       <main>
-        <section className="hero" id="casting">
+        <section className="hero publicCinemaHero" id="casting">
           <div>
             <div className="eyebrow">
               CASTING • FILM • TV • REKLAMA
@@ -34,7 +34,7 @@ export default function Home() {
 
   <p className="muted">
   Castingová databáze herců, komparzu, talentů a filmového
-  štábu z jižních Čech a okolí.
+  štábu z celé České republiky.
 </p>
 
 <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
