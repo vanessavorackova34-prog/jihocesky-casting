@@ -241,12 +241,22 @@ export default function ProductionDashboard() {
       return;
     }
 
-    const message = window.prompt(
-      `Text SMS pro ${selected.length} vybraných lidí:`,
-      "Dobrý den, byli jste vybráni na natáčení. Podrobnosti Vám zašleme v této zprávě."
+    const filmingName = window.prompt(
+      "Název natáčení / projektu:",
+      ""
     );
 
-    if (!message) return;
+    if (!filmingName?.trim()) return;
+
+    const defaultMessage =
+      `Dobrý den, byli jste vybráni na natáčení „${filmingName.trim()}“. Další informace k natáčení Vám zašleme. LEXAPA CASTING`;
+
+    const message = window.prompt(
+      `Text SMS pro ${selected.length} vybraných lidí (můžete jej upravit):`,
+      defaultMessage
+    );
+
+    if (!message?.trim()) return;
 
     const phones = selected
       .map((candidate) =>
