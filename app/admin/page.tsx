@@ -64,6 +64,7 @@ export default function AdminPage() {
     useState<Candidate | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [internalData, setInternalData] = useState<{favorite:boolean;verified:boolean;internal_note:string;photo_status:string}>({favorite:false,verified:false,internal_note:"",photo_status:""});
+  const [candidateHistory, setCandidateHistory] = useState<{casting_status:string;attendance_status:string;casting_projects:{name:string;filming_date:string|null}|null}[]>([]);
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -283,6 +284,10 @@ export default function AdminPage() {
       internal_note: data?.internal_note ?? "",
       photo_status: data?.photo_status ?? "",
     });
+    const { data: history } = await supabase.from("project_candidates")
+      .select("casting_status,attendance_status,casting_projects(name,filming_date)")
+      .eq("candidate_id", candidateId);
+    setCandidateHistory((history as any[]) || []);
   }
 
   async function saveInternal(candidateId: string, patch: Partial<typeof internalData>) {
@@ -1316,6 +1321,15 @@ function downloadBackup() {
                   }
                 />
               </div>
+
+              <section style={{ background:"#181818", padding:15, borderRadius:8, marginBottom:18 }}>
+                <h3 style={{marginTop:0}}>Historie projektů</h3>
+                {candidateHistory.length === 0 ? <div style={{color:"#999"}}>Zatím bez projektu.</div> :
+                  candidateHistory.map((h,i)=><div key={i} style={{padding:"7px 0",borderBottom:"1px solid #292929"}}>
+                    <strong>{h.casting_projects?.name || "Projekt"}</strong> {h.casting_projects?.filming_date ? `• ${h.casting_projects.filming_date}` : ""}<br/>
+                    <span style={{color:"#aaa"}}>{h.casting_status} • {h.attendance_status}</span>
+                  </div>)}
+              </section>
 
               <section style={{ background:"#181818", padding:15, borderRadius:8, marginBottom:18 }}>
                 <h3 style={{marginTop:0}}>Interní údaje LEXAPA CASTING</h3>
