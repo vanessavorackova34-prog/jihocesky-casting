@@ -388,3 +388,24 @@ linear-gradient(145deg,#17191b 0%,#090a0c 55%,#151109 100%);box-shadow:0 30px 80
 .organizerLoginCard .field input{height:64px;font-size:19px;border-radius:13px;padding:0 18px}
 .organizerLoginCard .primary{width:100%;min-height:62px;font-size:19px;font-weight:800;margin-top:8px}
 @media(max-width:650px){.organizerLoginCard{padding:30px 22px!important}.organizerLoginCard .field input{height:58px}}
+
+
+/* Cinematic talent dashboards */
+.talentDashboard{min-height:100vh;background:#08090a;color:#f7f2e7;padding:0 22px 45px}
+.talentDashboardInner{max-width:1540px;margin:0 auto}
+.talentHero{height:310px;position:relative;overflow:hidden;margin:0 -22px 28px;border-bottom:1px solid #8c672c;background:
+radial-gradient(circle at 18% 45%,rgba(219,170,71,.24),transparent 24%),
+radial-gradient(circle at 82% 42%,rgba(219,170,71,.20),transparent 22%),
+linear-gradient(110deg,#17130c 0%,#08090a 42%,#11100d 100%);box-shadow:0 20px 65px rgba(0,0,0,.55)}
+.talentHero:before{content:"";position:absolute;inset:auto -5% 36px -5%;height:3px;background:linear-gradient(90deg,transparent,#b47b25,#ffe29a,#b47b25,transparent);box-shadow:0 0 30px #c99236;transform:rotate(-2deg)}
+.talentHero:after{content:"";position:absolute;left:-5%;bottom:15px;width:48%;height:78px;border:5px solid rgba(197,145,48,.45);transform:rotate(7deg);box-shadow:0 0 30px rgba(197,145,48,.12)}
+.talentHeroFilm{position:absolute;left:6%;top:74px;font-size:120px;opacity:.38;filter:grayscale(1) sepia(.8)}
+.talentHeroCamera{position:absolute;right:8%;top:55px;font-size:145px;opacity:.58;filter:grayscale(1) sepia(.75) drop-shadow(0 20px 25px #000)}
+.talentHeroTitle{position:absolute;z-index:2;inset:45px 25% auto;display:flex;flex-direction:column;align-items:center;text-shadow:0 5px 25px #000}
+.talentHeroTitle strong{font-size:76px;line-height:.95;letter-spacing:5px}.talentHeroTitle strong span{color:#d4a24b}.talentHeroTitle b{font-size:28px;letter-spacing:13px;margin-top:12px}.talentHeroTitle small{font-size:16px;letter-spacing:8px;color:#dfbd72;margin-top:25px}
+.talentDashboard header{background:linear-gradient(135deg,rgba(20,20,18,.96),rgba(9,9,9,.96))!important;border:1px solid #5f4825!important;border-radius:18px!important;padding:18px 22px!important;box-shadow:0 16px 42px rgba(0,0,0,.32)}
+.talentDashboard section:not(.talentHero){border-color:#6c5127!important;background:linear-gradient(145deg,#151514,#0b0c0d)!important;box-shadow:0 15px 45px rgba(0,0,0,.28)}
+.talentDashboard input,.talentDashboard select{background:#0d0e10!important;color:#f6f0e4!important;border:1px solid #65502c!important}
+.talentDashboard button{transition:.18s ease}.talentDashboard button:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(202,157,68,.15)}
+.talentDashboard img{filter:saturate(.94) contrast(1.03)}
+@media(max-width:850px){.talentHero{height:230px}.talentHeroTitle{inset:45px 10% auto}.talentHeroTitle strong{font-size:48px}.talentHeroTitle b{font-size:20px;letter-spacing:8px}.talentHeroTitle small{font-size:11px;letter-spacing:4px}.talentHeroFilm{font-size:70px}.talentHeroCamera{font-size:85px}}
