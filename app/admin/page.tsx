@@ -55,6 +55,10 @@ export default function AdminPage() {
   const [cityFilter, setCityFilter] = useState("");
 
   const [search, setSearch] = useState("");
+  const [photoshootFilter, setPhotoshootFilter] = useState("Všichni");
+  const [transportFilter, setTransportFilter] = useState("Všichni");
+  const [minHeight, setMinHeight] = useState("");
+  const [maxHeight, setMaxHeight] = useState("");
 
   const [selectedCandidate, setSelectedCandidate] =
     useState<Candidate | null>(null);
@@ -540,6 +544,10 @@ function downloadBackup() {
     setRegionFilter("");
     setCityFilter("");
     setSearch("");
+    setPhotoshootFilter("Všichni");
+    setTransportFilter("Všichni");
+    setMinHeight("");
+    setMaxHeight("");
   }
 
   const cities =
@@ -569,6 +577,22 @@ function downloadBackup() {
         !cityFilter ||
         candidate.city === cityFilter
     )
+    .filter((candidate) => {
+      if (photoshootFilter === "Ano") return candidate.professional_photoshoot_interest === true;
+      if (photoshootFilter === "Ne") return candidate.professional_photoshoot_interest === false;
+      return true;
+    })
+    .filter((candidate) => {
+      if (transportFilter === "Řidičák") return candidate.has_driving_license === true;
+      if (transportFilter === "Vlastní auto") return candidate.has_own_car === true;
+      return true;
+    })
+    .filter((candidate) => {
+      const h = Number(candidate.height_cm ?? candidate.height_centimetres);
+      if (minHeight && (!h || h < Number(minHeight))) return false;
+      if (maxHeight && (!h || h > Number(maxHeight))) return false;
+      return true;
+    })
     .filter((candidate) => {
       const text = search.toLowerCase().trim();
 
