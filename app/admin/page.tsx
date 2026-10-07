@@ -240,18 +240,28 @@ export default function AdminPage() {
 
   async function addSelectionToExistingProject() {
     if (!supabase || selectedIds.length === 0) return;
-    if (projects.length === 0) { alert("Nejdřív vytvoř projekt."); return; }
-    const menu = projects.map((p,i)=>`${i+1}. ${p.name}`).join("
-");
-    const answer = window.prompt(`Vyber číslo projektu:
-${menu}`);
+    if (projects.length === 0) {
+      alert("Nejdřív vytvoř projekt.");
+      return;
+    }
+    const menu = projects.map((p, i) => (i + 1) + ". " + p.name).join(String.fromCharCode(10));
+    const answer = window.prompt("Vyber číslo projektu:" + String.fromCharCode(10) + menu);
     if (!answer) return;
-    const project = projects[Number(answer)-1];
-    if (!project) { alert("Neplatný výběr projektu."); return; }
-    const rows = selectedIds.map(candidate_id=>({project_id:project.id,candidate_id}));
-    const { error } = await supabase.from("project_candidates").upsert(rows,{onConflict:"project_id,candidate_id",ignoreDuplicates:true});
-    if (error) { alert("Kandidáty se nepodařilo přidat: "+error.message); return; }
-    alert(`Do projektu „${project.name}“ bylo přidáno ${selectedIds.length} vybraných kandidátů.`);
+    const project = projects[Number(answer) - 1];
+    if (!project) {
+      alert("Neplatný výběr projektu.");
+      return;
+    }
+    const rows = selectedIds.map((candidate_id) => ({ project_id: project.id, candidate_id }));
+    const { error } = await supabase.from("project_candidates").upsert(rows, {
+      onConflict: "project_id,candidate_id",
+      ignoreDuplicates: true,
+    });
+    if (error) {
+      alert("Kandidáty se nepodařilo přidat: " + error.message);
+      return;
+    }
+    alert("Vybraní kandidáti byli přidáni do projektu " + project.name + ".");
   }
 
   function openBulkSms() {
