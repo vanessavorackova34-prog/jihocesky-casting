@@ -64,7 +64,7 @@ export default function AdminPage() {
     useState<Candidate | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [internalData, setInternalData] = useState<{favorite:boolean;verified:boolean;internal_note:string;photo_status:string}>({favorite:false,verified:false,internal_note:"",photo_status:""});
-  const [candidateHistory, setCandidateHistory] = useState<{casting_status:string;attendance_status:string;casting_projects:{name:string;filming_date:string|null}|null}[]>([]);
+  const [candidateHistory, setCandidateHistory] = useState<{casting_status:string;attendance_status:string;casting_projects:{name:string;filming_date:string|null}|null}[]>([]);\n  const [projects, setProjects] = useState<{id:string;name:string}[]>([]);
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -237,7 +237,7 @@ export default function AdminPage() {
     alert(`Projekt „${name.trim()}“ vytvořen. Přiřazeno kandidátů: ${selectedIds.length}.`);
   }
 
-  function openBulkSms() {
+  async function addSelectionToExistingProject() {\n    if (!supabase || selectedIds.length === 0) return;\n    if (projects.length === 0) { alert("Nejdřív vytvoř projekt."); return; }\n    const menu = projects.map((p,i)=>`${i+1}. ${p.name}`).join("\\n");\n    const answer = window.prompt(`Vyber číslo projektu:\\n${menu}`);\n    if (!answer) return;\n    const project = projects[Number(answer)-1];\n    if (!project) { alert("Neplatný výběr projektu."); return; }\n    const rows = selectedIds.map(candidate_id=>({project_id:project.id,candidate_id}));\n    const { error } = await supabase.from("project_candidates").upsert(rows,{onConflict:"project_id,candidate_id",ignoreDuplicates:true});\n    if (error) { alert("Kandidáty se nepodařilo přidat: "+error.message); return; }\n    alert(`Do projektu „${project.name}“ bylo přidáno ${selectedIds.length} vybraných kandidátů.`);\n  }\n\n  function openBulkSms() {
     const selected = candidates.filter(
       (candidate) =>
         selectedIds.includes(candidate.id) &&
@@ -653,7 +653,7 @@ function downloadBackup() {
                 marginBottom: 8,
               }}
             >
-              JIHOČESKÝ CASTING
+              LEXAPA CASTING
             </div>
 
             <h1
@@ -671,7 +671,7 @@ function downloadBackup() {
                 marginTop: 8,
               }}
             >
-              Správa registrovaných talentů
+              Casting dashboard • správa talentů a projektů
             </p>
           </div>
 <button
@@ -1051,7 +1051,7 @@ function downloadBackup() {
                       )
                     }
                   />
-                  Vybrat pro hromadnou SMS
+                  Vybrat talent
                 </label>
 
                 <h2
@@ -1406,7 +1406,7 @@ function downloadBackup() {
   );
 }
 
-const inputStyle: React.CSSProperties = {
+const statCard: React.CSSProperties = { background:"linear-gradient(145deg,#171717,#0c0c0c)", border:"1px solid #3b321c", borderRadius:14, padding:"18px 20px", display:"flex", flexDirection:"column", gap:8 };\nconst statLabel: React.CSSProperties = { color:"#b7a46a", fontSize:11, letterSpacing:1.4, fontWeight:700 };\nconst statValue: React.CSSProperties = { fontSize:28, lineHeight:1 };\n\nconst inputStyle: React.CSSProperties = {
   width: "100%",
   boxSizing: "border-box",
   padding: "13px 15px",
