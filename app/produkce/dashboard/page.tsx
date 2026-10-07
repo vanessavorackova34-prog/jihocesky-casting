@@ -20,6 +20,11 @@ type Candidate = {
   role?: string | null;
   height_cm?: number | null;
   height_centimetres?: number | null;
+  chest_cm?: number | null;
+  waist_cm?: number | null;
+  hips_cm?: number | null;
+  inseam_cm?: number | null;
+  shoe_size?: number | null;
   experience?: string | null;
   availability?: string | null;
   status?: string | null;
@@ -1010,6 +1015,12 @@ export default function ProductionDashboard() {
                     : ""
                 }
               />
+
+              <Info label="Hrudník" value={selectedCandidate.chest_cm != null ? `${selectedCandidate.chest_cm} cm` : ""} />
+              <Info label="Pas" value={selectedCandidate.waist_cm != null ? `${selectedCandidate.waist_cm} cm` : ""} />
+              <Info label="Boky" value={selectedCandidate.hips_cm != null ? `${selectedCandidate.hips_cm} cm` : ""} />
+              <Info label="Vnitřní délka nohy" value={selectedCandidate.inseam_cm != null ? `${selectedCandidate.inseam_cm} cm` : ""} />
+              <Info label="Velikost bot" value={selectedCandidate.shoe_size != null ? String(selectedCandidate.shoe_size) : ""} />
 
               <Info
                 label="Zkušenosti"
