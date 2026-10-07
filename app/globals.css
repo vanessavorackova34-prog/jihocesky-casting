@@ -431,3 +431,42 @@ linear-gradient(110deg,#17130c 0%,#08090a 42%,#11100d 100%);box-shadow:0 20px 65
  .organizerLoginCard h1{font-size:42px!important}
  .organizerLoginCard .field input{height:60px!important;font-size:18px!important}
 }
+
+
+/* Larger organizer + production login cards */
+.organizerLogin .card {
+  width: min(92vw, 680px) !important;
+  max-width: 680px !important;
+  padding: 56px 64px !important;
+  border-radius: 30px !important;
+}
+.organizerLogin .card h1 {
+  font-size: clamp(44px, 5vw, 68px) !important;
+  margin: 22px 0 34px !important;
+}
+.organizerLogin .eyebrow {
+  font-size: 20px !important;
+  letter-spacing: 5px !important;
+}
+.organizerLogin .field label {
+  font-size: 20px !important;
+}
+.organizerLogin .field input {
+  min-height: 72px !important;
+  font-size: 22px !important;
+  padding: 16px 20px !important;
+}
+.organizerLogin .btn.primary {
+  min-height: 68px !important;
+  font-size: 22px !important;
+  padding: 16px 34px !important;
+}
+@media (max-width: 600px) {
+  .organizerLogin .card {
+    width: calc(100vw - 32px) !important;
+    padding: 38px 28px !important;
+  }
+  .organizerLogin .card h1 { font-size: 46px !important; }
+  .organizerLogin .field input { min-height: 66px !important; }
+  .organizerLogin .btn.primary { min-height: 64px !important; }
+}
