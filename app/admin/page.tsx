@@ -647,20 +647,8 @@ function downloadBackup() {
     });
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: "#000",
-        color: "#fff",
-        padding: "30px 20px",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 1250,
-          margin: "0 auto",
-        }}
-      >
+    <main className="talentDashboard organizerDashboard">
+      <div className="talentDashboardInner"><section className="talentHero"><div className="talentHeroFilm">🎞️</div><div className="talentHeroTitle"><strong>LE<span>X</span>APA</strong><b>CASTING</b><small>DATABÁZE TALENTŮ</small></div><div className="talentHeroCamera">🎥</div></section>
         <header
           style={{
             display: "flex",
