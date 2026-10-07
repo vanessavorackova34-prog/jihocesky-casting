@@ -409,3 +409,25 @@ linear-gradient(110deg,#17130c 0%,#08090a 42%,#11100d 100%);box-shadow:0 20px 65
 .talentDashboard button{transition:.18s ease}.talentDashboard button:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(202,157,68,.15)}
 .talentDashboard img{filter:saturate(.94) contrast(1.03)}
 @media(max-width:850px){.talentHero{height:230px}.talentHeroTitle{inset:45px 10% auto}.talentHeroTitle strong{font-size:48px}.talentHeroTitle b{font-size:20px;letter-spacing:8px}.talentHeroTitle small{font-size:11px;letter-spacing:4px}.talentHeroFilm{font-size:70px}.talentHeroCamera{font-size:85px}}
+
+
+/* Organizer login desktop size override */
+.organizerLoginCard{
+  width:min(850px,92vw)!important;
+  max-width:850px!important;
+  padding:64px 70px!important;
+  min-height:610px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.organizerLoginCard h1{font-size:64px!important;line-height:1.05!important;margin:12px 0 34px!important}
+.organizerLoginCard .eyebrow{font-size:18px!important}
+.organizerLoginCard .field label{font-size:19px!important}
+.organizerLoginCard .field input{height:72px!important;font-size:22px!important}
+.organizerLoginCard .primary{min-height:70px!important;font-size:22px!important;padding:16px 28px!important}
+@media(max-width:650px){
+ .organizerLoginCard{width:94vw!important;min-height:auto;padding:34px 24px!important}
+ .organizerLoginCard h1{font-size:42px!important}
+ .organizerLoginCard .field input{height:60px!important;font-size:18px!important}
+}
