@@ -60,7 +60,6 @@ export default function Home() {
             </Link>
           </div>
          </div>
-          <div className="cinemaArtwork" aria-hidden="true"><div className="cameraShape">🎥</div><div className="filmFrame"/><div className="filmFrame filmTwo"/><div className="goldBeam"/><div className="artLabel">FILM • CASTING • TALENT</div></div>
         </section>
 
         <section className="stats">
