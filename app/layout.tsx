@@ -1,7 +1,8 @@
 import "./globals.css";
+
 export const metadata = {
-  title: "Jihočeský casting",
-  description: "Registrace na casting",
+  title: "LEXAPA CASTING | Herecká databáze",
+  description: "Oficiální castingová databáze LEXAPA CASTING pro herce, komparz, modely a talenty z celé České republiky.",
 };
 
 export default function RootLayout({
