@@ -470,31 +470,3 @@ linear-gradient(110deg,#17130c 0%,#08090a 42%,#11100d 100%);box-shadow:0 20px 65
   .organizerLogin .field input { min-height: 66px !important; }
   .organizerLogin .btn.primary { min-height: 64px !important; }
 }
-
-/* LEXAPA photo-free cinematic landing page */
-.lexBrand{color:#e3b963;text-decoration:none;font-weight:900;font-size:clamp(16px,2vw,24px)}
-.lexHomeTop{gap:15px}
-.lexLanding{max-width:1450px;margin:auto;padding:0 4% 55px}
-.lexLandingHero{min-height:510px;display:flex;align-items:center;position:relative;overflow:hidden;padding:65px 3%;background:radial-gradient(ellipse at 80% 35%,rgba(191,128,36,.22),transparent 48%),linear-gradient(120deg,#08090b,#16120e 60%,#08090b);border-bottom:1px solid #8e682e}
-.lexLandingHero:after{content:"";position:absolute;right:-8%;bottom:17%;width:55%;height:3px;background:linear-gradient(90deg,transparent,#c08d35,transparent);transform:rotate(-12deg);opacity:.7}
-.lexLandingContent{position:relative;z-index:2;max-width:780px}
-.lexLandingContent h1{font-size:clamp(60px,9vw,125px);line-height:.91;letter-spacing:-3px;margin:25px 0 22px;color:#fff}
-.lexLandingContent h1 span{color:#e3b65c}
-.lexLandingContent p{font-size:clamp(17px,2vw,23px);line-height:1.55;max-width:650px;color:#ddd6cc}
-.lexLandingActions{display:flex;gap:16px;flex-wrap:wrap;margin-top:30px}
-.lexLandingActions .btn{padding:17px 27px}
-.lexFilmDecor{position:absolute;right:5%;top:23%;font-size:180px;opacity:.17;filter:grayscale(1) sepia(.8)}
-.lexLandingFacts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;padding:32px 0}
-.lexLandingFacts>div{padding:12px;border-left:2px solid #b98a3a}
-.lexLandingFacts strong{display:block;color:#e0b35d;font-size:18px}
-.lexLandingFacts small{display:block;color:#aaa39b;margin-top:7px}
-.lexCategoryGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin:10px 0 32px}
-.lexCategory{min-height:220px;border:1px solid #6c512a;border-radius:20px;background:radial-gradient(circle at 80% 5%,rgba(200,148,62,.12),transparent 55%),linear-gradient(145deg,#191817,#0b0c0e);padding:26px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 15px 40px #0006}
-.lexCategoryIcon{font-size:42px;color:#e5b75e;margin-bottom:auto}
-.lexCategory h2{font-size:26px;margin:20px 0 6px}
-.lexCategory p{color:#bcb4a8;margin:0;line-height:1.5}
-.lexProduction{border:1px solid #6c512a;border-radius:24px;padding:clamp(30px,5vw,65px);background:radial-gradient(circle at 85% 15%,rgba(197,139,49,.22),transparent 42%),linear-gradient(135deg,#201912,#090a0c 70%)}
-.lexProduction h2{font-size:clamp(32px,4.5vw,58px);line-height:1.1;margin:20px 0}
-.lexProduction p{color:#d1c9bc;line-height:1.7;max-width:700px;font-size:17px;margin-bottom:30px}
-@media(max-width:850px){.lexLandingFacts,.lexCategoryGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.lexLandingHero{min-height:440px}.lexFilmDecor{font-size:120px}}
-@media(max-width:520px){.lexHomeTop .btn{font-size:11px;padding:10px}.lexLandingHero{padding:55px 2%;min-height:410px}.lexLandingContent h1{font-size:clamp(55px,14vw,76px)}.lexLandingActions .btn{flex:1;text-align:center;padding:14px 12px}.lexLandingFacts{gap:8px}.lexLandingFacts strong{font-size:14px}.lexCategoryGrid{gap:10px}.lexCategory{min-height:180px;padding:17px}.lexCategory h2{font-size:21px}.lexCategory p{font-size:13px}.lexFilmDecor{opacity:.08}}
