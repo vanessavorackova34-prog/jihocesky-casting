@@ -1,55 +1,106 @@
 import Link from "next/link";
 
-const categories = [
-  { icon: "🎭", title: "Herci", description: "Profesionálové i začátečníci" },
-  { icon: "🎬", title: "Komparz", description: "Pro film, seriál i reklamu" },
-  { icon: "✦", title: "Děti", description: "Od 3 měsíců" },
-  { icon: "★", title: "Senioři", description: "Až do 98 let" },
-];
-
 export default function Home() {
   return (
     <>
-      <header className="top lexHomeTop">
-        <Link href="/" className="lexBrand">🎬 <span>LEXAPA CASTING</span></Link>
-        <Link className="btn compact" href="/prihlaseni">♟ Přihlášení pořadatele</Link>
+      <header className="top">
+        <div className="logo">
+          🎬 <span>LEXAPA CASTING</span>
+        </div>
+
+        <nav className="nav">
+          <Link href="/o-castingu">O castingu</Link>
+          <Link href="/jak-to-funguje">Jak to funguje</Link>
+          <Link href="/kontakt">Kontakt</Link>
+        </nav>
+
+        <Link className="btn" href="/prihlaseni">
+          Přihlášení pořadatele
+        </Link>
       </header>
-      <main className="lexLanding">
-        <section className="lexLandingHero">
-          <div className="lexLandingContent">
-            <div className="eyebrow">CASTING • FILM • TV • REKLAMA • KLIPY</div>
-            <h1>LEXAPA<br/><span>CASTING</span></h1>
-            <p>Castingová databáze herců, komparzu, talentů a filmového štábu z celé České republiky.</p>
-            <div className="lexLandingActions">
-              <Link className="btn primary" href="/registrace">Registrovat profil →</Link>
-              <Link className="btn" href="/produkce">Pro produkce →</Link>
+
+      <main>
+        <section className="hero publicCinemaHero" id="casting">
+          <div className="publicHeroCopy">
+            <div className="eyebrow">
+              CASTING • FILM • TV • REKLAMA
             </div>
+
+            <h1>
+              LEXAPA
+              <br />
+              <span className="gold">CASTING</span>
+            </h1>
+
+  <p className="muted">
+  Castingová databáze herců, komparzu, talentů a filmového
+  štábu z celé České republiky.
+</p>
+
+<div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+  <Link className="btn" href="/prihlaseni">
+    Přihlášení pořadatele
+  </Link>
+
+  <Link className="btn" href="/produkce">
+    Pro produkce
+  </Link>
+</div>
+
+          <div className="card">
+            <h2>Hledáme nové tváře</h2>
+
+            <p className="muted">
+              Zaregistruj se do databáze a můžeš být osloven/a pro film,
+              seriál, reklamu, klip nebo focení.
+            </p>
+
+            <Link className="btn primary" href="/registrace">
+              Registrovat profil
+            </Link>
           </div>
-          <div className="lexFilmDecor" aria-hidden="true"><span>🎬</span></div>
+         </div>
+          <div className="cinemaArtwork" aria-hidden="true"><div className="cameraShape">🎥</div><div className="filmFrame"/><div className="filmFrame filmTwo"/><div className="goldBeam"/><div className="artLabel">FILM • CASTING • TALENT</div></div>
         </section>
-        <section className="lexLandingFacts" aria-label="Působnost databáze">
-          <div><strong>1000+</strong><small>registrovaných talentů</small></div>
-          <div><strong>3 měsíce – 98 let</strong><small>věkové rozpětí</small></div>
-          <div><strong>Všech 14 krajů</strong><small>celá Česká republika</small></div>
-          <div><strong>Film • TV • Reklama</strong><small>seriály, klipy a focení</small></div>
+
+        <section className="stats">
+          <div className="stat">
+            <b>🎭</b>
+            <small>Herci a herečky</small>
+          </div>
+
+          <div className="stat">
+            <b>🎬</b>
+            <small>Komparz a statisté</small>
+          </div>
+
+          <div className="stat">
+            <b>📸</b>
+            <small>Modelové a talenty</small>
+          </div>
+
+          <div className="stat">
+            <b>📍</b>
+            <small>Celá Česká republika</small>
+          </div>
         </section>
-        <section className="lexCategoryGrid" aria-label="Kategorie talentů">
-          {categories.map((item) => (
-            <div className="lexCategory" key={item.title}>
-              <div className="lexCategoryIcon" aria-hidden="true">{item.icon}</div>
-              <h2>{item.title}</h2>
-              <p>{item.description}</p>
-            </div>
-          ))}
-        </section>
-        <section className="lexProduction">
-          <div className="eyebrow">SPOLUPRÁCE PRO PRODUKCE</div>
-          <h2>Kompletní castingové<br/>a produkční služby</h2>
-          <p>Zajišťujeme herce, komparz, koordinátory, transport, ubytování, catering, kostýmy, BTS fotografie a další služby pro natáčení po celé České republice.</p>
-          <Link className="btn primary" href="/produkce">Více o spolupráci →</Link>
+
+        <section className="section" id="jak">
+          <div className="card">
+            <h2>Jak to funguje?</h2>
+
+            <p className="muted">
+              1. Vyplníš registrační formulář. 2. Nahraješ fotografie.
+              3. Profil čeká na schválení. 4. Pořadatelé ho mohou zařadit
+              do vhodného projektu.
+            </p>
+          </div>
         </section>
       </main>
-      <footer>© 2026 LEXAPA CASTING</footer>
+
+      <footer id="kontakt">
+        © 2026 LEXAPA Casting
+      </footer>
     </>
   );
 }
