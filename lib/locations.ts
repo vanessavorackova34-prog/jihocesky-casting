@@ -13,6 +13,14 @@ export const regions = [
   "Olomoucký kraj",
   "Moravskoslezský kraj",
   "Zlínský kraj",
+  "Bratislavský kraj (Slovensko)",
+  "Trnavský kraj (Slovensko)",
+  "Trenčiansky kraj (Slovensko)",
+  "Nitriansky kraj (Slovensko)",
+  "Žilinský kraj (Slovensko)",
+  "Banskobystrický kraj (Slovensko)",
+  "Prešovský kraj (Slovensko)",
+  "Košický kraj (Slovensko)",
 ];
 
 export const citiesByRegion: Record<string, string[]> = {
@@ -278,6 +286,14 @@ export const citiesByRegion: Record<string, string[]> = {
     "Vsetín",
     "Zlín",
   ],
+  "Bratislavský kraj (Slovensko)": ["Bratislava", "Malacky", "Pezinok", "Senec", "Stupava", "Modra"],
+  "Trnavský kraj (Slovensko)": ["Trnava", "Piešťany", "Hlohovec", "Galanta", "Dunajská Streda", "Senica", "Skalica", "Sereď"],
+  "Trenčiansky kraj (Slovensko)": ["Trenčín", "Prievidza", "Považská Bystrica", "Dubnica nad Váhom", "Nové Mesto nad Váhom", "Partizánske", "Púchov", "Bánovce nad Bebravou"],
+  "Nitriansky kraj (Slovensko)": ["Nitra", "Nové Zámky", "Komárno", "Levice", "Topoľčany", "Šaľa", "Zlaté Moravce", "Štúrovo"],
+  "Žilinský kraj (Slovensko)": ["Žilina", "Martin", "Liptovský Mikuláš", "Ružomberok", "Čadca", "Dolný Kubín", "Kysucké Nové Mesto", "Námestovo"],
+  "Banskobystrický kraj (Slovensko)": ["Banská Bystrica", "Zvolen", "Lučenec", "Rimavská Sobota", "Brezno", "Žiar nad Hronom", "Detva", "Veľký Krtíš"],
+  "Prešovský kraj (Slovensko)": ["Prešov", "Poprad", "Bardejov", "Humenné", "Vranov nad Topľou", "Snina", "Kežmarok", "Stará Ľubovňa", "Svidník"],
+  "Košický kraj (Slovensko)": ["Košice", "Michalovce", "Spišská Nová Ves", "Trebišov", "Rožňava", "Gelnica", "Sobrance", "Krompachy"],
 };
 
 export function getCitiesForRegion(region: string) {
