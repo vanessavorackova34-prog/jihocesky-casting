@@ -295,7 +295,7 @@ export default function Registration() {
         `${window.location.origin}/moje-registrace?token=${editToken}`;
 
       setMsg(
-        "Registrace včetně fotografií byla úspěšně odeslána."
+        "Registrace byla úspěšně odeslána. DŮLEŽITÉ: Uložte si níže svůj osobní odkaz pro správu profilu."
       );
       setMyLink(link);
 
@@ -333,7 +333,7 @@ export default function Registration() {
     <>
       <header className="top">
         <div className="logo">
-          🎬 <span>JIHOČESKÝ CASTING</span>
+          🎬 <span>LEXAPA CASTING</span>
         </div>
 
         <Link className="btn" href="/">
@@ -365,6 +365,67 @@ export default function Registration() {
               {msg}
             </div>
           )}
+
+          {myLink && (
+              <div
+                className="success"
+                style={{
+                  marginTop: 20,
+                  padding: 20,
+                }}
+              >
+                <strong>
+                  Registrace byla úspěšně odeslána
+                </strong>
+
+                <p>
+                  DŮLEŽITÉ: Tento odkaz si nyní zkopírujte a bezpečně uložte. Přes něj se později
+                  vrátíš ke své registraci.
+                </p>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 10,
+                    flexWrap: "wrap",
+                    marginTop: 15,
+                  }}
+                >
+                  <a
+                    href={myLink}
+                    className="btn primary"
+                    style={{
+                      textDecoration: "none",
+                    }}
+                  >
+                    Moje registrace
+                  </a>
+
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={copyLink}
+                  >
+                    {copied
+                      ? "✓ Odkaz zkopírován"
+                      : "📋 Kopírovat odkaz"}
+                  </button>
+                </div>
+
+                <input
+                  value={myLink}
+                  readOnly
+                  onFocus={(e) =>
+                    e.currentTarget.select()
+                  }
+                  style={{
+                    width: "100%",
+                    marginTop: 15,
+                    padding: 10,
+                  }}
+                />
+              </div>
+            )}
 
           {err && (
             <div className="error">
@@ -588,66 +649,7 @@ export default function Registration() {
                 : "Odeslat registraci"}
             </button>
 
-            {myLink && (
-              <div
-                className="success"
-                style={{
-                  marginTop: 20,
-                  padding: 20,
-                }}
-              >
-                <strong>
-                  Registrace byla úspěšně odeslána
-                </strong>
-
-                <p>
-                  Ulož si tento odkaz. Přes něj se později
-                  vrátíš ke své registraci.
-                </p>
-
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 10,
-                    flexWrap: "wrap",
-                    marginTop: 15,
-                  }}
-                >
-                  <a
-                    href={myLink}
-                    className="btn primary"
-                    style={{
-                      textDecoration: "none",
-                    }}
-                  >
-                    Moje registrace
-                  </a>
-
-                  <button
-                    type="button"
-                    className="btn"
-                    onClick={copyLink}
-                  >
-                    {copied
-                      ? "✓ Odkaz zkopírován"
-                      : "📋 Kopírovat odkaz"}
-                  </button>
-                </div>
-
-                <input
-                  value={myLink}
-                  readOnly
-                  onFocus={(e) =>
-                    e.currentTarget.select()
-                  }
-                  style={{
-                    width: "100%",
-                    marginTop: 15,
-                    padding: 10,
-                  }}
-                />
-              </div>
-            )}
+  
           </form>
         </div>
       </main>
