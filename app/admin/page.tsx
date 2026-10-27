@@ -540,7 +540,7 @@ function downloadBackup() {
   const visibleCandidates = candidates
     .filter(
       (candidate) =>
-        (candidate.status || "pending") === filter
+        (photoshootFilter === "Ano" || (candidate.status || "pending") === filter)
     )
     .filter((candidate) =>
       matchesRole(candidate)
@@ -690,30 +690,43 @@ function downloadBackup() {
           }}
         >
           <button
-            onClick={() => setFilter("pending")}
+            onClick={() => { setFilter("pending"); setPhotoshootFilter("Všichni"); }}
             style={filterButton(
-              filter === "pending"
+              filter === "pending" && photoshootFilter !== "Ano"
             )}
           >
             ⏳ Čekající
           </button>
 
           <button
-            onClick={() => setFilter("approved")}
+            onClick={() => { setFilter("approved"); setPhotoshootFilter("Všichni"); }}
             style={filterButton(
-              filter === "approved"
+              filter === "approved" && photoshootFilter !== "Ano"
             )}
           >
             ✅ Schválené
           </button>
 
           <button
-            onClick={() => setFilter("rejected")}
+            onClick={() => { setFilter("rejected"); setPhotoshootFilter("Všichni"); }}
             style={filterButton(
-              filter === "rejected"
+              filter === "rejected" && photoshootFilter !== "Ano"
             )}
           >
             ❌ Zamítnuté
+          </button>
+          <button
+            onClick={() => setPhotoshootFilter("Ano")}
+            style={{
+              ...filterButton(photoshootFilter === "Ano"),
+              border: photoshootFilter === "Ano" ? "2px solid #f5cb68" : "2px solid #b48a35",
+              background: photoshootFilter === "Ano" ? "#5b4318" : "#241c0e",
+              color: "#ffe3a0",
+              fontWeight: 800,
+              boxShadow: photoshootFilter === "Ano" ? "0 0 0 2px rgba(245,203,104,.2)" : "none",
+            }}
+          >
+            📸 Zájem o přefocení (600 Kč) · {candidates.filter(c => c.professional_photoshoot_interest === true).length}
           </button>
         </div>
 
@@ -792,19 +805,6 @@ function downloadBackup() {
               <option>51+</option>
             </select>
 
-            <label style={{ display: "grid", gap: 6, color: "#d5bd83", fontSize: 14 }}>
-              Zájem o přefocení (600 Kč)
-              <select
-                aria-label="Zájem o přefocení"
-                value={photoshootFilter}
-                onChange={(e) => setPhotoshootFilter(e.target.value)}
-                style={inputStyle}
-              >
-                <option value="Všichni">Všichni zájemci</option>
-                <option value="Ano">Ano – mají zájem</option>
-                <option value="Ne">Ne – nemají zájem</option>
-              </select>
-            </label>
             <select value={transportFilter} onChange={(e)=>setTransportFilter(e.target.value)} style={inputStyle}>
               <option>Všichni</option><option>Řidičák</option><option>Vlastní auto</option>
             </select>
