@@ -792,9 +792,19 @@ function downloadBackup() {
               <option>51+</option>
             </select>
 
-            <select value={photoshootFilter} onChange={(e)=>setPhotoshootFilter(e.target.value)} style={inputStyle}>
-              <option>Všichni</option><option>Ano</option><option>Ne</option>
-            </select>
+            <label style={{ display: "grid", gap: 6, color: "#d5bd83", fontSize: 14 }}>
+              Zájem o přefocení (600 Kč)
+              <select
+                aria-label="Zájem o přefocení"
+                value={photoshootFilter}
+                onChange={(e) => setPhotoshootFilter(e.target.value)}
+                style={inputStyle}
+              >
+                <option value="Všichni">Všichni zájemci</option>
+                <option value="Ano">Ano – mají zájem</option>
+                <option value="Ne">Ne – nemají zájem</option>
+              </select>
+            </label>
             <select value={transportFilter} onChange={(e)=>setTransportFilter(e.target.value)} style={inputStyle}>
               <option>Všichni</option><option>Řidičák</option><option>Vlastní auto</option>
             </select>
