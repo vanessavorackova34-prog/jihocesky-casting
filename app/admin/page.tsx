@@ -119,21 +119,9 @@ export default function AdminPage() {
           ? candidate.photo_paths
           : [];
 
-        const photos = paths.map((path: string) => {
-          const { data } =
-            supabase.storage
-              .from("fotky-hercu")
-              .getPublicUrl(path, {
-                transform: {
-                  width: 420,
-                  height: 320,
-                  resize: "cover",
-                  quality: 72,
-                },
-              });
-
-          return data.publicUrl;
-        });
+        const photos = paths.map((path: string) =>
+          supabase.storage.from("fotky-hercu").getPublicUrl(path).data.publicUrl
+        );
 
         const photoOriginals = paths.map((path: string) =>
           supabase.storage
@@ -151,79 +139,44 @@ export default function AdminPage() {
     setCandidates(initialCandidates);
     setLoading(false);
 
-    // Ověříme Storage i u profilů, které mají photo_paths uložené.
-    // Některé starší záznamy mají cesty zastaralé nebo neúplné.
-    // Skutečné soubory ze Storage proto bereme jako zdroj pravdy.
-    const queue = [...initialCandidates];
+    // Recover only profiles without saved paths. Avoid hundreds of redundant
+    // Storage requests on every admin page load.
+    const queue = initialCandidates.filter(
+      (candidate) => !candidate.photo_paths?.length
+    );
 
     async function worker() {
       while (queue.length > 0) {
         const candidate = queue.shift();
         if (!candidate) return;
 
-        const { data: files, error: listError } =
-          await supabase.storage
-            .from("fotky-hercu")
-            .list(candidate.id, {
-              limit: 20,
-              sortBy: {
-                column: "name",
-                order: "asc",
-              },
-            });
+        const { data: files, error: listError } = await supabase.storage
+          .from("fotky-hercu")
+          .list(candidate.id, { limit: 100, sortBy: { column: "name", order: "asc" } });
 
-        if (listError || !files) {
-          continue;
-        }
+        if (listError || !files) continue;
 
-        const imageFiles = files.filter((file) =>
-          /\.(jpe?g|png|webp|heic|heif)$/i.test(
-            file.name
-          )
+        const paths = files
+          .filter((file) => /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name))
+          .map((file) => `${candidate.id}/${file.name}`);
+
+        if (!paths.length) continue;
+
+        const photos = paths.map(
+          (path) => supabase.storage.from("fotky-hercu").getPublicUrl(path).data.publicUrl
         );
-
-        const photos = imageFiles.map((file) => {
-          const path =
-            `${candidate.id}/${file.name}`;
-
-          return supabase.storage
-            .from("fotky-hercu")
-            .getPublicUrl(path, {
-              transform: {
-                width: 420,
-                height: 320,
-                resize: "cover",
-                quality: 72,
-              },
-            }).data.publicUrl;
-        });
-
-        const photoOriginals = imageFiles.map((file) => {
-          const path =
-            `${candidate.id}/${file.name}`;
-
-          return supabase.storage
-            .from("fotky-hercu")
-            .getPublicUrl(path).data.publicUrl;
-        });
-
-        if (photos.length === 0) {
-          continue;
-        }
 
         setCandidates((current) =>
           current.map((item) =>
             item.id === candidate.id
-              ? { ...item, photos, photoOriginals }
+              ? { ...item, photos, photoOriginals: photos }
               : item
           )
         );
       }
     }
 
-    await Promise.all(
-      Array.from({ length: 4 }, () => worker())
-    );
+    await Promise.all(Array.from({ length: 4 }, () => worker()));
   }
 
   async function createProjectFromSelection() {
