@@ -736,18 +736,32 @@ function downloadBackup() {
           >
             ❌ Zamítnuté
           </button>
+
+        </div>
+
+        <div style={{ marginBottom: 24, padding: 16, background: "#17120a", border: "2px solid #d5a94f", borderRadius: 14 }}>
+          <div style={{ color: "#f4d28c", fontWeight: 800, fontSize: 17, marginBottom: 10 }}>
+            📸 PROFESIONÁLNÍ PŘEFOCENÍ · 600 Kč
+          </div>
           <button
-            onClick={() => setPhotoshootFilter("Ano")}
+            type="button"
+            onClick={() => {
+              setPhotoshootFilter(photoshootFilter === "Ano" ? "Všichni" : "Ano");
+              setSearch("");
+            }}
             style={{
-              ...filterButton(photoshootFilter === "Ano"),
-              border: photoshootFilter === "Ano" ? "2px solid #f5cb68" : "2px solid #b48a35",
-              background: photoshootFilter === "Ano" ? "#5b4318" : "#241c0e",
-              color: "#ffe3a0",
+              width: "100%",
+              padding: "16px 20px",
+              background: photoshootFilter === "Ano" ? "#f2cb70" : "#493411",
+              color: photoshootFilter === "Ano" ? "#181000" : "#ffe3a0",
+              border: "2px solid #f2cb70",
+              borderRadius: 10,
               fontWeight: 800,
-              boxShadow: photoshootFilter === "Ano" ? "0 0 0 2px rgba(245,203,104,.2)" : "none",
+              fontSize: 17,
+              cursor: "pointer",
             }}
           >
-            📸 Zájem o přefocení (600 Kč) · {candidates.filter(c => c.professional_photoshoot_interest === true).length}
+            {photoshootFilter === "Ano" ? "✓ Zobrazují se zájemci · Zpět na všechny" : "ZOBRAZIT ZÁJEMCE O PŘEFOCENÍ"} ({candidates.filter(c => c.professional_photoshoot_interest === true).length})
           </button>
         </div>
 
