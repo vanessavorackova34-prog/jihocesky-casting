@@ -287,6 +287,28 @@ export default function AdminPage() {
   ) {
     if (!supabase) return;
 
+    if (status === "rejected") {
+      const { data: assignments, error: assignmentError } = await supabase
+        .from("project_candidates")
+        .select("candidate_id")
+        .eq("candidate_id", id)
+        .limit(1);
+      if (assignmentError || (assignments && assignments.length > 0)) {
+        alert("Profil je propojený s projektem nebo nelze vazby ověřit. Kvůli ochraně dat nebude automaticky smazán.");
+        return;
+      }
+      const { error: rejectError } = await supabase
+        .from("candidates")
+        .update({ status: "rejected" })
+        .eq("id", id);
+      if (rejectError) {
+        alert("Zamítnutí se nepodařilo: " + rejectError.message);
+        return;
+      }
+      await deleteCandidate(id, "", true);
+      return;
+    }
+
     const { error } = await supabase
       .from("candidates")
       .update({ status })
@@ -345,15 +367,14 @@ function downloadBackup() {
 }
   async function deleteCandidate(
     id: string,
-    name: string
+    name: string,
+    automatic = false
   ) {
     if (!supabase) return;
 
-    const confirmed = window.confirm(
+    if (!automatic && !window.confirm(
       `Opravdu chceš smazat registraci ${name}? Registrace i všechny fotografie budou trvale odstraněny.`
-    );
-
-    if (!confirmed) return;
+    )) return;
 
     const { data: files, error: listError } =
       await supabase.storage
