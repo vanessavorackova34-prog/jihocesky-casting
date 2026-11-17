@@ -362,30 +362,29 @@ export default function AdminPage() {
       return;
     }
 
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from("candidates")
       .update({ status })
-      .eq("id", id);
+      .eq("id", id)
+      .select("id,status")
+      .maybeSingle();
 
-    if (error) {
-      alert(
-        "Stav se nepodařilo změnit: " +
-          error.message
-      );
+    if (error || !updated || updated.status !== status) {
+      alert("Stav se nepodařilo potvrdit v databázi: " + (error?.message || "Změna nebyla potvrzena. Zkontrolujte oprávnění."));
       return;
     }
 
     setCandidates((current) =>
       current.map((candidate) =>
         candidate.id === id
-          ? { ...candidate, status }
+          ? { ...candidate, status: updated.status }
           : candidate
       )
     );
 
     setSelectedCandidate((current) =>
       current && current.id === id
-        ? { ...current, status }
+        ? { ...current, status: updated.status }
         : current
     );
   }
@@ -1392,7 +1391,7 @@ function downloadBackup() {
                 <Info
                   label="Stav"
                   value={
-                    selectedCandidate.status
+                    selectedCandidate.status === "approved" ? "Schváleno (approved)" : selectedCandidate.status === "pending" ? "Čeká na schválení (pending)" : selectedCandidate.status === "rejected" ? "Zamítnuto (rejected)" : selectedCandidate.status || "Neuvedeno"
                   }
                 />
               </div>
