@@ -45,6 +45,8 @@ export default function AdminPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [photoshootCount, setPhotoshootCount] = useState<number | null>(null);
+  const [photoshootCountError, setPhotoshootCountError] = useState("");
 
   const [filter, setFilter] =
     useState<"pending" | "approved" | "rejected">("pending");
@@ -88,6 +90,7 @@ export default function AdminPage() {
   async function loadCandidates() {
     setLoading(true);
     setError("");
+    setPhotoshootCountError("");
 
     if (!supabase) {
       setError("Web není připojený k databázi.");
@@ -102,6 +105,18 @@ export default function AdminPage() {
     if (!user) {
       router.push("/prihlaseni");
       return;
+    }
+
+    // Count independently of the visible list and its filters.
+    const { count: interestedCount, error: countError } = await supabase
+      .from("candidates")
+      .select("id", { count: "exact", head: true })
+      .eq("professional_photoshoot_interest", true);
+    if (countError) {
+      setPhotoshootCountError("Počet zájemců nelze načíst: " + countError.message);
+      setPhotoshootCount(null);
+    } else {
+      setPhotoshootCount(interestedCount ?? 0);
     }
 
     const allCandidates: Candidate[] = [];
@@ -778,9 +793,11 @@ function downloadBackup() {
               cursor: "pointer",
             }}
           >
-            {photoshootFilter === "Ano" ? "✓ Zobrazují se zájemci · Zpět na všechny" : "ZOBRAZIT ZÁJEMCE O PŘEFOCENÍ"} ({candidates.filter(c => c.professional_photoshoot_interest === true).length})
+            {photoshootFilter === "Ano" ? "✓ Zobrazují se zájemci · Zpět na všechny" : "ZOBRAZIT ZÁJEMCE O PŘEFOCENÍ"} ({photoshootCount === null ? "…" : photoshootCount})
           </button>
         </div>
+
+        {photoshootCountError && <p role="alert" style={{color:"#ffaaaa",marginBottom:16}}>{photoshootCountError}</p>}
 
         <section
           style={{
