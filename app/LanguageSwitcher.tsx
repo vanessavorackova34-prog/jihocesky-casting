@@ -135,6 +135,14 @@ Object.assign(translations, {
   "Odkaz se nepodařilo zkopírovat. Podrž ho a zkopíruj ručně.":"Could not copy the link. Press and hold to copy manually.",
   "Odkaz se nepodařilo zkopírovat. Podrž odkaz a zkopíruj ho ručně.":"Could not copy the link. Press and hold to copy manually.",
 });
+Object.assign(translations, {
+  "CASTING • FILM • TV • REKLAMA":"CASTING • FILM • TV • ADVERTISING",
+  "Castingová databáze herců, komparzu, talentů a filmového štábu z celé České republiky.":"Casting database for actors, background performers, talent and film crew from across the Czech Republic and Europe.",
+  "Zaregistruj se do databáze a můžeš být osloven/a pro film, seriál, reklamu, klip nebo focení.":"Join our casting database and get considered for films, TV series, commercials, music videos and photo shoots.",
+  "Jak to funguje?":"How does it work?",
+  "1. Vyplníš registrační formulář. 2. Nahraješ fotografie. 3. Profil čeká na schválení. 4. Pořadatelé ho mohou zařadit do vhodného projektu.":"1. Complete the registration form. 2. Upload your photos. 3. Your profile is reviewed. 4. Our casting team may select you for a suitable project.",
+  "© 2026 LEXAPA Casting":"© 2026 LEXAPA CASTING",
+});
 const originals = new WeakMap<Text,string>();
 const attributes = new WeakMap<Element,Map<string,string>>();
 export default function LanguageSwitcher(){
@@ -154,8 +162,8 @@ export default function LanguageSwitcher(){
       if(!parent||parent.closest("[data-language-switcher],script,style,textarea,option[data-keep-original]"))continue;
       const raw=originals.get(textNode)??textNode.nodeValue??"";
       if(!originals.has(textNode))originals.set(textNode,raw);
-      const trimmed=raw.trim();const translated=lang==="en"?(translations[trimmed]??trimmed):trimmed;
-      const next=raw.replace(trimmed,translated);
+      const trimmed=raw.trim();const normalized=trimmed.replace(/\\s+/g," ");const translated=lang==="en"?(translations[normalized]??translations[trimmed]??trimmed):trimmed;
+      const next=translated===trimmed?raw:raw.replace(trimmed,translated);
       if(textNode.nodeValue!==next)textNode.nodeValue=next;
      }
      for(const element of Array.from(document.querySelectorAll("input[placeholder],textarea[placeholder],option"))){
