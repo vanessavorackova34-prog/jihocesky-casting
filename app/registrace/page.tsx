@@ -376,6 +376,7 @@ export default function Registration() {
             </div>
           )}
 
+          <div style={{display:"flex",justifyContent:"flex-end",gap:12,marginBottom:16}}><strong>🇨🇿 CZ</strong><Link href="/registration">🇬🇧 EN</Link></div>
           <form onSubmit={submit}>
             <div className="grid">
               <div className="field">
