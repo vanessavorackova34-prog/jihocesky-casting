@@ -107,17 +107,26 @@ export default function AdminPage() {
       return;
     }
 
-    // Count independently of the visible list and its filters.
-    const { count: interestedCount, error: countError } = await supabase
-      .from("candidates")
-      .select("id", { count: "exact", head: true })
-      .eq("professional_photoshoot_interest", true);
-    if (countError) {
-      setPhotoshootCountError("Počet zájemců nelze načíst: " + countError.message);
-      setPhotoshootCount(null);
-    } else {
-      setPhotoshootCount(interestedCount ?? 0);
-    }
+    // Run the independent count without blocking candidate loading.
+    // A stalled count request must never freeze the rest of admin.
+    void (async () => {
+      try {
+        const result = await Promise.race([
+          supabase.from("candidates").select("id", { count: "exact", head: true }).eq("professional_photoshoot_interest", true),
+          new Promise<{ count: null; error: { message: string } }>((resolve) =>
+            setTimeout(() => resolve({ count: null, error: { message: "Časový limit 8 sekund" } }), 8000)
+          ),
+        ]);
+        if (result.error) {
+          setPhotoshootCountError("Počet zájemců: " + result.error.message);
+        } else {
+          setPhotoshootCount(result.count ?? 0);
+          setPhotoshootCountError("");
+        }
+      } catch (err) {
+        setPhotoshootCountError("Počet zájemců: " + String(err));
+      }
+    })();
 
     const allCandidates: Candidate[] = [];
     let loadError: string | null = null;
@@ -167,6 +176,7 @@ export default function AdminPage() {
       });
 
     setCandidates(initialCandidates);
+    setPhotoshootCount((current) => current ?? initialCandidates.filter(c => c.professional_photoshoot_interest === true).length);
     setLoading(false);
 
     // Recover only profiles without saved paths. Avoid hundreds of redundant
