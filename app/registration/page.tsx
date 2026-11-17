@@ -452,13 +452,13 @@ export default function Registration() {
               <div className="field">
                 <label>Role / type *</label>
                 <select name="role">
-                  <option>Actor</option>
-                  <option>Background actor</option>
-                  <option>Extra</option>
-                  <option>Model</option>
-                  <option>Stunt performer</option>
-                  <option>Film crew</option>
-                  <option>Other</option>
+                  <option value="Herec / herečka">Actor</option>
+                  <option value="Komparz">Background actor</option>
+                  <option value="Statista">Extra</option>
+                  <option value="Model / modelka">Model</option>
+                  <option value="Kaskadér">Stunt performer</option>
+                  <option value="Filmový štáb">Film crew</option>
+                  <option value="Jiné">Other</option>
                 </select>
               </div>
 
