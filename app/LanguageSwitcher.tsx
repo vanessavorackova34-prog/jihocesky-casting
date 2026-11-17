@@ -162,7 +162,7 @@ export default function LanguageSwitcher(){
       if(!parent||parent.closest("[data-language-switcher],script,style,textarea,option[data-keep-original]"))continue;
       const raw=originals.get(textNode)??textNode.nodeValue??"";
       if(!originals.has(textNode))originals.set(textNode,raw);
-      const trimmed=raw.trim();const normalized=trimmed.replace(/\\s+/g," ");const translated=lang==="en"?(translations[normalized]??translations[trimmed]??trimmed):trimmed;
+      const trimmed=raw.trim();const normalized=trimmed.replace(/\s+/g," ");const translated=lang==="en"?(translations[normalized]??translations[trimmed]??trimmed):trimmed;
       const next=translated===trimmed?raw:raw.replace(trimmed,translated);
       if(textNode.nodeValue!==next)textNode.nodeValue=next;
      }
