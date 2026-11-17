@@ -47,6 +47,7 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [photoshootCount, setPhotoshootCount] = useState<number | null>(null);
   const [photoshootCountError, setPhotoshootCountError] = useState("");
+  const [loadingStage, setLoadingStage] = useState("Spouštím načítání");
 
   const [filter, setFilter] =
     useState<"pending" | "approved" | "rejected">("pending");
@@ -87,6 +88,15 @@ export default function AdminPage() {
     loadCandidates();
   }, []);
 
+  useEffect(() => {
+    if (!loading) return;
+    const timer = setTimeout(() => {
+      setError((previous) => previous || "Načítání trvá příliš dlouho. Fáze: " + loadingStage + ". Zkuste znovu načíst stránku.");
+      setLoading(false);
+    }, 12000);
+    return () => clearTimeout(timer);
+  }, [loading, loadingStage]);
+
   async function loadCandidates() {
     setLoading(true);
     setError("");
@@ -98,6 +108,7 @@ export default function AdminPage() {
       return;
     }
 
+    setLoadingStage("Ověření přihlášení");
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -107,6 +118,7 @@ export default function AdminPage() {
       return;
     }
 
+    setLoadingStage("Načítání registrací");
     // Run the independent count without blocking candidate loading.
     // A stalled count request must never freeze the rest of admin.
     void (async () => {
@@ -141,6 +153,7 @@ export default function AdminPage() {
         break;
       }
       allCandidates.push(...((page || []) as Candidate[]));
+      setLoadingStage("Načteno " + allCandidates.length + " registrací");
       if (!page || page.length < 500) break;
     }
 
@@ -176,7 +189,7 @@ export default function AdminPage() {
       });
 
     setCandidates(initialCandidates);
-    setPhotoshootCount((current) => current ?? initialCandidates.filter(c => c.professional_photoshoot_interest === true).length);
+    setPhotoshootCount(initialCandidates.filter(c => c.professional_photoshoot_interest === true).length);
     setLoading(false);
 
     // Recover only profiles without saved paths. Avoid hundreds of redundant
@@ -803,7 +816,7 @@ function downloadBackup() {
               cursor: "pointer",
             }}
           >
-            {photoshootFilter === "Ano" ? "✓ Zobrazují se zájemci · Zpět na všechny" : "ZOBRAZIT ZÁJEMCE O PŘEFOCENÍ"} ({photoshootCount === null ? "…" : photoshootCount})
+            {photoshootFilter === "Ano" ? "✓ Zobrazují se zájemci · Zpět na všechny" : "ZOBRAZIT ZÁJEMCE O PŘEFOCENÍ"} ({photoshootCount === null ? "Načítám" : photoshootCount})
           </button>
         </div>
 
@@ -966,7 +979,7 @@ function downloadBackup() {
               borderRadius: 10,
             }}
           >
-            Načítám registrace...
+            Načítám registrace... {loadingStage}
           </div>
         )}
 
