@@ -51,7 +51,7 @@ export default function LanguageSwitcher(){
    observer.observe(document.body,{childList:true,subtree:true,characterData:true});
    return ()=>observer.disconnect();
  },[lang]);
- return <div data-language-switcher style={{position:"fixed",top:10,right:10,zIndex:99999,display:"flex",gap:4,padding:5,borderRadius:9,background:"#161616",border:"1px solid #b9954b",boxShadow:"0 3px 14px #0008"}}>
+ return <div data-language-switcher style={{position:"fixed",bottom:"max(18px, env(safe-area-inset-bottom))",right:18,zIndex:99999,display:"flex",gap:4,padding:5,borderRadius:24,background:"#161616",border:"1px solid #b9954b",boxShadow:"0 3px 14px #0008"}}>
   <button type="button" onClick={()=>setLang("cs")} aria-label="Čeština" style={{padding:"7px 10px",border:0,borderRadius:6,background:lang==="cs"?"#d9b568":"transparent",color:lang==="cs"?"#111":"#fff",cursor:"pointer"}}>🇨🇿 CZ</button>
   <button type="button" onClick={()=>setLang("en")} aria-label="English" style={{padding:"7px 10px",border:0,borderRadius:6,background:lang==="en"?"#d9b568":"transparent",color:lang==="en"?"#111":"#fff",cursor:"pointer"}}>🇬🇧 EN</button>
  </div>;
