@@ -340,28 +340,6 @@ export default function AdminPage() {
   ) {
     if (!supabase) return;
 
-    if (status === "rejected") {
-      const { data: assignments, error: assignmentError } = await supabase
-        .from("project_candidates")
-        .select("candidate_id")
-        .eq("candidate_id", id)
-        .limit(1);
-      if (assignmentError || (assignments && assignments.length > 0)) {
-        alert("Profil je propojený s projektem nebo nelze vazby ověřit. Kvůli ochraně dat nebude automaticky smazán.");
-        return;
-      }
-      const { error: rejectError } = await supabase
-        .from("candidates")
-        .update({ status: "rejected" })
-        .eq("id", id);
-      if (rejectError) {
-        alert("Zamítnutí se nepodařilo: " + rejectError.message);
-        return;
-      }
-      await deleteCandidate(id, "", true);
-      return;
-    }
-
     const { data: updated, error } = await supabase
       .from("candidates")
       .update({ status })
