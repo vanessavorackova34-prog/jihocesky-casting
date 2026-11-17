@@ -149,6 +149,9 @@ export default function LanguageSwitcher(){
  const [lang,setLang]=useState<"cs"|"en">("cs");
  useEffect(()=>{const stored=window.localStorage.getItem("lexapa-language");if(stored==="en")setLang("en");},[]);
  useEffect(()=>{
+   // Avoid direct DOM text mutations inside React-managed admin controls.
+   // Those mutations can interfere with hydration and interactive updates.
+   if (window.location.pathname.startsWith("/admin")) return;
    document.documentElement.lang=lang;
    window.localStorage.setItem("lexapa-language",lang);
    let busy=false;
