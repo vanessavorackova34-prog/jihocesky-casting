@@ -7,12 +7,14 @@ import {
   regions,
   getCitiesForRegion,
 } from "../../lib/locations";
+import { europeanCountries } from "../../lib/countries";
 
 type Candidate = {
   id: string;
   first_name: string;
   last_name: string;
   age: number;
+  country: string | null;
   kraj: string | null;
   city: string | null;
   phone: string | null;
@@ -51,6 +53,7 @@ export default function AdminPage() {
   const [genderFilter, setGenderFilter] = useState("Všichni");
   const [ageFilter, setAgeFilter] = useState("Všichni");
 
+  const [countryFilter, setCountryFilter] = useState("");
   const [regionFilter, setRegionFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
 
@@ -546,6 +549,7 @@ function downloadBackup() {
     setRoleFilter("Všichni");
     setGenderFilter("Všichni");
     setAgeFilter("Všichni");
+    setCountryFilter("");
     setRegionFilter("");
     setCityFilter("");
     setSearch("");
@@ -572,6 +576,7 @@ function downloadBackup() {
     .filter((candidate) =>
       matchesAge(candidate)
     )
+    .filter((candidate) => !countryFilter || (candidate.country || "Česká republika") === countryFilter)
     .filter(
       (candidate) =>
         !regionFilter ||
@@ -846,6 +851,11 @@ function downloadBackup() {
             <input type="number" placeholder="Výška od (cm)" value={minHeight} onChange={(e)=>setMinHeight(e.target.value)} style={inputStyle} />
             <input type="number" placeholder="Výška do (cm)" value={maxHeight} onChange={(e)=>setMaxHeight(e.target.value)} style={inputStyle} />
 
+            <select value={countryFilter} onChange={(e) => { setCountryFilter(e.target.value); setRegionFilter(""); setCityFilter(""); }} style={inputStyle}>
+              <option value="">Všechny země</option>
+              {europeanCountries.map((country) => <option key={country} value={country}>{country}</option>)}
+            </select>
+
             <select
               value={regionFilter}
               onChange={(e) => {
@@ -858,7 +868,7 @@ function downloadBackup() {
                 Všechny kraje
               </option>
 
-              {regions.map((region) => (
+              {regions.filter((region) => !countryFilter || (countryFilter === "Slovensko" ? region.includes("(Slovensko)") : countryFilter === "Česká republika" ? !region.includes("(Slovensko)") : false)).map((region) => (
                 <option
                   key={region}
                   value={region}
@@ -1080,6 +1090,7 @@ function downloadBackup() {
                   {candidate.age} let
                 </div>
 
+                <div style={mutedStyle}>🌍 {candidate.country || "Česká republika"}</div>
                 {candidate.kraj && (
                   <div style={mutedStyle}>
                     📍 {candidate.kraj}
