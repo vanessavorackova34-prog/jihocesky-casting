@@ -1,4 +1,5 @@
 import "./globals.css";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 export const metadata = {
   title: "LEXAPA CASTING | Herecká databáze",
@@ -12,7 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="cs">
-      <body>{children}</body>
+      <body><LanguageSwitcher />{children}</body>
     </html>
   );
 }
