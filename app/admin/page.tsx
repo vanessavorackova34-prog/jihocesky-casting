@@ -104,18 +104,30 @@ export default function AdminPage() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from("candidates")
-      .select("*");
+    const allCandidates: Candidate[] = [];
+    let loadError: string | null = null;
+    for (let offset = 0; ; offset += 500) {
+      const { data: page, error: pageError } = await supabase
+        .from("candidates")
+        .select("*")
+        .order("id", { ascending: true })
+        .range(offset, offset + 499);
+      if (pageError) {
+        loadError = pageError.message;
+        break;
+      }
+      allCandidates.push(...((page || []) as Candidate[]));
+      if (!page || page.length < 500) break;
+    }
 
-    if (error) {
-      setError("Chyba Supabase: " + error.message);
+    if (loadError) {
+      setError("Chyba Supabase: " + loadError);
       setLoading(false);
       return;
     }
 
     const initialCandidates: Candidate[] =
-      (data || []).map((candidate) => {
+      allCandidates.map((candidate) => {
         const paths = Array.isArray(
           candidate.photo_paths
         )
