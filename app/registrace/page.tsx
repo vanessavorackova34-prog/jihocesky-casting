@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { regions, getCitiesForRegion } from "../../lib/locations";
+import { europeanCountries } from "../../lib/countries";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
@@ -124,6 +125,7 @@ export default function Registration() {
   const [myLink, setMyLink] = useState("");
   const [copied, setCopied] = useState(false);
 
+  const [selectedCountry, setSelectedCountry] = useState("Česká republika");
   const [selectedRegion, setSelectedRegion] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
 
@@ -165,12 +167,12 @@ export default function Registration() {
       return;
     }
 
-    if (!selectedRegion) {
+    if ((selectedCountry === "Česká republika" || selectedCountry === "Slovensko") && !selectedRegion) {
       setErr("Vyber prosím kraj.");
       return;
     }
 
-    if (!selectedCity) {
+    if (!selectedCity.trim()) {
       setErr("Vyber prosím město.");
       return;
     }
@@ -188,7 +190,8 @@ export default function Registration() {
         last_name: f.get("last_name"),
         age: Number(f.get("age")),
         gender: f.get("gender"),
-        kraj: f.get("kraj"),
+        country: selectedCountry,
+        kraj: (selectedCountry === "Česká republika" || selectedCountry === "Slovensko") ? f.get("kraj") : null,
         city: f.get("city"),
         phone: f.get("phone"),
         email: f.get("email"),
@@ -300,6 +303,7 @@ export default function Registration() {
       setMyLink(link);
 
       form.reset();
+      setSelectedCountry("Česká republika");
       setSelectedRegion("");
       setSelectedCity("");
     } catch (error) {
@@ -333,7 +337,7 @@ export default function Registration() {
     <>
       <header className="top">
         <div className="logo">
-          🎬 <span>JIHOČESKÝ CASTING</span>
+          🎬 <span>LEXAPA CASTING</span>
         </div>
 
         <Link className="btn" href="/">
@@ -405,57 +409,30 @@ export default function Registration() {
               </div>
 
               <div className="field">
-                <label>Kraj *</label>
-
-                <select
-                  name="kraj"
-                  value={selectedRegion}
-                  onChange={(e) => {
-                    setSelectedRegion(e.target.value);
-                    setSelectedCity("");
-                  }}
-                  required
-                >
-                  <option value="">Vyberte kraj</option>
-
-                  {regions.map((region) => (
-                    <option
-                      key={region}
-                      value={region}
-                    >
-                      {region}
-                    </option>
-                  ))}
+                <label>Země bydliště *</label>
+                <select name="country" value={selectedCountry} onChange={(e) => { setSelectedCountry(e.target.value); setSelectedRegion(""); setSelectedCity(""); }} required>
+                  {europeanCountries.map((country) => <option key={country} value={country}>{country}</option>)}
                 </select>
               </div>
-
+              {(selectedCountry === "Česká republika" || selectedCountry === "Slovensko") && (
+                <div className="field">
+                  <label>Kraj *</label>
+                  <select name="kraj" value={selectedRegion} onChange={(e) => { setSelectedRegion(e.target.value); setSelectedCity(""); }} required>
+                    <option value="">Vyberte kraj</option>
+                    {regions.filter((region) => selectedCountry === "Slovensko" ? region.includes("(Slovensko)") : !region.includes("(Slovensko)")).map((region) => <option key={region} value={region}>{region}</option>)}
+                  </select>
+                </div>
+              )}
               <div className="field">
                 <label>Město *</label>
-
-                <select
-                  name="city"
-                  value={selectedCity}
-                  onChange={(e) =>
-                    setSelectedCity(e.target.value)
-                  }
-                  disabled={!selectedRegion}
-                  required
-                >
-                  <option value="">
-                    {selectedRegion
-                      ? "Vyberte město"
-                      : "Nejdříve vyberte kraj"}
-                  </option>
-
-                  {cities.map((city) => (
-                    <option
-                      key={city}
-                      value={city}
-                    >
-                      {city}
-                    </option>
-                  ))}
-                </select>
+                {(selectedCountry === "Česká republika" || selectedCountry === "Slovensko") ? (
+                  <select name="city" value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)} disabled={!selectedRegion} required>
+                    <option value="">{selectedRegion ? "Vyberte město" : "Nejdříve vyberte kraj"}</option>
+                    {cities.map((city) => <option key={city} value={city}>{city}</option>)}
+                  </select>
+                ) : (
+                  <input name="city" value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)} placeholder="Zadejte město bydliště" required maxLength={120} />
+                )}
               </div>
 
               <div className="field">
