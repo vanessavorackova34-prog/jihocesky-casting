@@ -101,6 +101,7 @@ export default function AdminPage() {
     setLoading(true);
     setError("");
     setPhotoshootCountError("");
+    setPhotoshootCount(null);
 
     if (!supabase) {
       setError("Web není připojený k databázi.");
@@ -119,27 +120,6 @@ export default function AdminPage() {
     }
 
     setLoadingStage("Načítání registrací");
-    // Run the independent count without blocking candidate loading.
-    // A stalled count request must never freeze the rest of admin.
-    void (async () => {
-      try {
-        const result = await Promise.race([
-          supabase.from("candidates").select("id", { count: "exact", head: true }).eq("professional_photoshoot_interest", true),
-          new Promise<{ count: null; error: { message: string } }>((resolve) =>
-            setTimeout(() => resolve({ count: null, error: { message: "Časový limit 8 sekund" } }), 8000)
-          ),
-        ]);
-        if (result.error) {
-          setPhotoshootCountError("Počet zájemců: " + result.error.message);
-        } else {
-          setPhotoshootCount(result.count ?? 0);
-          setPhotoshootCountError("");
-        }
-      } catch (err) {
-        setPhotoshootCountError("Počet zájemců: " + String(err));
-      }
-    })();
-
     const allCandidates: Candidate[] = [];
     let loadError: string | null = null;
     for (let offset = 0; ; offset += 500) {
@@ -365,6 +345,13 @@ export default function AdminPage() {
         ? { ...current, status: updated.status }
         : current
     );
+
+    // Re-read the authoritative status to detect a conflicting concurrent update.
+    const { data: verified, error: verifyError } = await supabase.from("candidates").select("status").eq("id", id).single();
+    if (verifyError || verified?.status !== status) {
+      alert("Stav se nepodařilo ověřit. Obnovuji seznam registrací.");
+      await loadCandidates();
+    }
   }
 function downloadBackup() {
   if (candidates.length === 0) {
