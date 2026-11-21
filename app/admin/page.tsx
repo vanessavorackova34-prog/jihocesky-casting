@@ -1292,6 +1292,16 @@ function downloadBackup() {
                 </h2>
 
                 <button
+                  onClick={() => {
+                    setEditingCandidate(selectedCandidate);
+                    setEditFiles([]);
+                    setReplacePhotos(false);
+                  }}
+                  style={{ background: "#d7b36a", color: "#111", border: "none", borderRadius: 6, padding: "10px 12px", fontWeight: 700, cursor: "pointer" }}
+                >
+                  ✏️ Upravit
+                </button>
+                <button
                   onClick={() =>
                     setSelectedCandidate(null)
                   }
