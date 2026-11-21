@@ -69,6 +69,10 @@ export default function AdminPage() {
   const [selectedCandidate, setSelectedCandidate] =
     useState<Candidate | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [editingCandidate, setEditingCandidate] = useState<Candidate | null>(null);
+  const [editFiles, setEditFiles] = useState<File[]>([]);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [replacePhotos, setReplacePhotos] = useState(false);
   const [internalData, setInternalData] = useState<{favorite:boolean;verified:boolean;internal_note:string;photo_status:string}>({favorite:false,verified:false,internal_note:"",photo_status:""});
   const [candidateHistory, setCandidateHistory] = useState<{casting_status:string;attendance_status:string;casting_projects:{name:string;filming_date:string|null}|null}[]>([]);
   const [projects, setProjects] = useState<{id:string;name:string}[]>([]);
@@ -351,6 +355,54 @@ export default function AdminPage() {
     if (verifyError || verified?.status !== status) {
       alert("Stav se nepodařilo ověřit. Obnovuji seznam registrací.");
       await loadCandidates();
+    }
+  }
+  async function saveCandidateEdit() {
+    if (!supabase || !editingCandidate || savingEdit) return;
+    setSavingEdit(true);
+    try {
+      const original = candidates.find(c => c.id === editingCandidate.id);
+      if (!original) throw new Error("Profil nebyl nalezen.");
+      const paths = replacePhotos ? [] : [...(original.photo_paths || [])];
+      const uploaded: string[] = [];
+      try {
+        for (const file of editFiles) {
+          if (!file.type.startsWith("image/")) throw new Error("Lze nahrát pouze obrázky.");
+          if (file.size > 15 * 1024 * 1024) throw new Error("Fotografie musí mít nejvýše 15 MB.");
+          const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+          const filePath = `${editingCandidate.id}/admin-${crypto.randomUUID()}.${ext}`;
+          const { error } = await supabase.storage.from("fotky-hercu").upload(filePath, file, { upsert: false, contentType: file.type });
+          if (error) throw error;
+          uploaded.push(filePath);
+          paths.push(filePath);
+        }
+        const changes = {
+          first_name: editingCandidate.first_name,
+          last_name: editingCandidate.last_name,
+          phone: editingCandidate.phone,
+          email: editingCandidate.email,
+          city: editingCandidate.city,
+          kraj: editingCandidate.kraj,
+          height_cm: editingCandidate.height_cm,
+          photo_paths: paths,
+        };
+        const { data, error } = await supabase.from("candidates").update(changes).eq("id", editingCandidate.id).select("id").single();
+        if (error || !data) throw error || new Error("Změny nebyly potvrzeny databází.");
+        const photos = paths.map(p => supabase.storage.from("fotky-hercu").getPublicUrl(p).data.publicUrl);
+        const updated = { ...original, ...changes, photos, photoOriginals: photos };
+        setCandidates(current => current.map(c => c.id === updated.id ? updated : c));
+        setSelectedCandidate(updated);
+        setEditingCandidate(null);
+        setEditFiles([]);
+        setReplacePhotos(false);
+      } catch (error) {
+        if (uploaded.length) await supabase.storage.from("fotky-hercu").remove(uploaded);
+        throw error;
+      }
+    } catch (error) {
+      alert("Úpravy se nepodařilo uložit: " + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setSavingEdit(false);
     }
   }
 function downloadBackup() {
@@ -1130,6 +1182,16 @@ function downloadBackup() {
 
                 <button
                   onClick={() => {
+                    setEditingCandidate(candidate);
+                    setEditFiles([]);
+                    setReplacePhotos(false);
+                  }}
+                  style={{ width: "100%", padding: 10, marginBottom: 8, borderRadius: 7, cursor: "pointer", background: "#272727", color: "#fff", border: "1px solid #555" }}
+                >
+                  ✏️ Upravit profil
+                </button>
+                <button
+                  onClick={() => {
                     setSelectedCandidate(candidate);
                     loadInternal(candidate.id);
                   }}
@@ -1151,6 +1213,33 @@ function downloadBackup() {
           ))}
         </div>
 
+        {editingCandidate && (
+          <div onClick={() => !savingEdit && setEditingCandidate(null)} style={{ position: "fixed", inset: 0, zIndex: 2000, background: "rgba(0,0,0,.8)", display: "flex", justifyContent: "center", alignItems: "center", padding: 16 }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: "#161616", color: "#fff", padding: 24, borderRadius: 12, maxWidth: 560, width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
+              <h2>✏️ Upravit profil</h2>
+              <p>Profil a jeho historie zůstanou zachované.</p>
+              {([
+                ["first_name", "Jméno"], ["last_name", "Příjmení"], ["phone", "Telefon"], ["email", "E-mail"], ["city", "Město"], ["kraj", "Kraj"], ["height_cm", "Výška (cm)"]
+              ] as const).map(([field, label]) => (
+                <label key={field} style={{ display: "block", marginBottom: 12 }}>
+                  {label}
+                  <input value={editingCandidate[field] ?? ""} onChange={e => setEditingCandidate(c => c ? { ...c, [field]: field === "height_cm" ? (e.target.value ? Number(e.target.value) : null) : e.target.value } : c)} style={{ display: "block", width: "100%", boxSizing: "border-box", padding: 10, marginTop: 4, borderRadius: 6 }} />
+                </label>
+              ))}
+              <label style={{ display: "block", marginBottom: 12 }}>
+                Přidat nové fotografie
+                <input type="file" accept="image/*" multiple onChange={e => setEditFiles(Array.from(e.target.files || []))} style={{ display: "block", marginTop: 8 }} />
+              </label>
+              <label style={{ display: "block", marginBottom: 16 }}>
+                <input type="checkbox" checked={replacePhotos} onChange={e => setReplacePhotos(e.target.checked)} /> Nahradit původní fotografie novými (staré soubory zůstanou v úložišti)
+              </label>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button disabled={savingEdit} onClick={() => setEditingCandidate(null)} style={{ padding: 12 }}>Zrušit</button>
+                <button disabled={savingEdit || (replacePhotos && editFiles.length === 0)} onClick={saveCandidateEdit} style={{ padding: 12, background: "#fff", color: "#000", fontWeight: 700 }}>{savingEdit ? "Ukládám…" : "Uložit změny"}</button>
+              </div>
+            </div>
+          </div>
+        )}
         {selectedCandidate && (
           <div
             onClick={() =>
