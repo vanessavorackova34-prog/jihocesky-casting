@@ -34,7 +34,9 @@ export async function POST(request) {
     if (!result.accepted.length) return new Response(null,{status:502});
     const ack = await db.rpc("studio_ack_email",{p_token:token,p_lease:job.lease});
     return new Response(null,{status:ack.error ? 503 : 204});
-  } catch {
-    return new Response(null,{status:502});
+  } catch (error) {
+    const allowed = ["EAUTH","ECONNECTION","ETIMEDOUT","ESOCKET","EENVELOPE","EMESSAGE","EDNS"];
+    const code = allowed.includes(error?.code) ? error.code : "SMTP_FAILURE";
+    return Response.json({code, smtpStatus:Number(error?.responseCode) || null},{status:502});
   }
 }
