@@ -10,7 +10,7 @@ const table = "photoatelier_reservations";
 const statuses = { pending: "Čeká na potvrzení", confirmed: "Potvrzeno", cancelled: "Zrušeno" };
 const times = Array.from({ length: 21 }, (_, index) =>
   `${10 + Math.floor(index / 3)}:${String(index % 3 * 20).padStart(2, "0")}`
-);
+).filter((time) => !time.startsWith("12:"));
 
 type Reservation = {
   id: string;

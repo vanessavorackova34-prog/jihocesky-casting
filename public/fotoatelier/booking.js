@@ -10,7 +10,7 @@ const firstMonth = new Date(earliest.getFullYear(), earliest.getMonth(), 1);
 const month = new Date(firstMonth);
 const times = Array.from({ length: 21 }, (_, i) =>
   String(10 + Math.floor(i / 3)) + ':' + String((i % 3) * 20).padStart(2, '0')
-);
+).filter((time) => !time.startsWith("12:"));
 let selected = '';
 let loadingSlots;
 let sending = false;
