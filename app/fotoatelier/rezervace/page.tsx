@@ -1,6 +1,7 @@
 "use client";
 
 import { createBrowserClient } from "@supabase/ssr";
+import styles from "./reservations.module.css";
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 
@@ -106,9 +107,16 @@ export default function PhotoatelierAdmin() {
     }
   }
 
+  const byDate = new Map<string, Reservation[]>();
+  for (const row of rows) {
+    const group = byDate.get(row.booking_date);
+    if (group) group.push(row);
+    else byDate.set(row.booking_date, [row]);
+  }
+
   return (
-    <main className="section">
-      <nav className="nav">
+    <main className={styles.page}>
+      <nav className={styles.nav}>
         <button className="btn" onClick={async () => {
           if (!url || !key) return;
           const { error } = await createBrowserClient(url, key).auth.signOut({ scope: "local" });
@@ -122,14 +130,20 @@ export default function PhotoatelierAdmin() {
       {error && <p role="alert">{error}</p>}
       {!loading && !error && !rows.length && <p>Zatím žádné rezervace.</p>}
       {notice && <p role="status">{notice}</p>}
-      {rows.map((row) => (
-        <article className="card" key={row.id}>
-          <h2>{row.client_name}</h2>
-          <p>{new Intl.DateTimeFormat("cs-CZ", { timeZone: "UTC" }).format(new Date(row.booking_date))}
-            {" · "}{row.booking_time.slice(0, 5)}{" · "}{statuses[row.status]}</p>
-          <p><a href={`mailto:${encodeURIComponent(row.email)}`}>{row.email}</a>{" · "}
+      {Array.from(byDate, ([date, bookings]) => (
+        <section className={styles.day} key={date}>
+          <h2>{new Date(date + "T12:00:00").toLocaleDateString("cs-CZ", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</h2>
+          {bookings.map((row) => (
+        <article className={styles.booking} key={row.id}>
+          <div className={styles.head}>
+            <time>{row.booking_time.slice(0, 5)}</time>
+            <h3>{row.client_name}</h3>
+            <span data-status={row.status}>{statuses[row.status]}</span>
+          </div>
+          <p className={styles.contacts}><a href={`mailto:${encodeURIComponent(row.email)}`}>{row.email}</a>
             <a href={`tel:${row.phone.replace(/[^+\d]/g, "")}`}>{row.phone}</a></p>
-          {row.note && <p>{row.note}</p>}
+          {row.note && <p className={styles.note}>{row.note}</p>}
+          <details><summary>Upravit rezervaci</summary>
           <form key={row.booking_time + row.status} onSubmit={(event) => save(event, row)}>
             <label className="field">Čas focení
               <select name="time" defaultValue={row.booking_time.slice(0, 5)}>
@@ -146,8 +160,11 @@ export default function PhotoatelierAdmin() {
               {saving === row.id ? "Ukládám…" : "Uložit změny"}
             </button>
           </form>
-          <button className="btn" type="button" disabled={!!saving} onClick={() => removeReservation(row)}>Smazat rezervaci</button>
+          <button className={styles.remove} type="button" disabled={!!saving} onClick={() => removeReservation(row)}>Smazat rezervaci</button>
+        </details>
         </article>
+          ))}
+        </section>
       ))}
     </main>
   );

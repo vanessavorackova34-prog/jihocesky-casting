@@ -1,0 +1,28 @@
+.page { max-width: 860px; margin: 0 auto; padding: 28px clamp(16px,4vw,40px) 96px; color: #f6f1e9; }
+.nav { display: flex; flex-direction: row-reverse; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.page h1 { margin: 36px 0 24px; font-size: clamp(30px,5vw,48px); line-height: 1.1; }
+.day { margin: 26px 0; padding: 0; }
+.day h2 { margin: 0 0 12px; color: #e4c27b; font-size: 17px; }
+.day h2::first-letter { text-transform: uppercase; }
+.booking { padding: 18px; margin: 8px 0; border: 1px solid #494036; border-radius: 14px; background: #191918; }
+.head { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 12px; }
+.head time { color: #ebcb89; font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.head h3 { margin: 0; font-size: 19px; overflow-wrap: anywhere; }
+.head span { width: fit-content; padding: 5px 10px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #45351c; color: #ffda91; }
+.head [data-status="confirmed"] { background: #203e32; color: #afe8c6; }
+.head [data-status="cancelled"] { background: #393536; color: #ded6d7; }
+.contacts { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 12px 0; }
+.contacts a { color: #e4ded3; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; padding: 5px 0; }
+.note { padding-left: 12px; border-left: 2px solid #756245; white-space: pre-wrap; overflow-wrap: anywhere; }
+.booking details { border-top: 1px solid #403c35; }
+.booking summary { cursor: pointer; padding: 13px 0 2px; color: #e4c27b; }
+.booking form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+.booking label { min-width: 0; }
+.booking select { width: 100%; min-height: 44px; }
+.remove { background: transparent; color: #ffb8b0; border: 1px solid #72514b; border-radius: 8px; padding: 10px 14px; cursor: pointer; }
+@media(max-width: 540px) {
+  .head { grid-template-columns: auto minmax(0,1fr); gap: 6px 12px; }
+  .head span { grid-column: 2; }
+  .booking form { grid-template-columns: 1fr; }
+  .contacts { flex-direction: column; }
+}
