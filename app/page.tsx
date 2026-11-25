@@ -62,7 +62,7 @@ export default function Home() {
           </div>
           <div className="card" style={{ marginTop: 8 }}>
             <h2>LEXAPA Fotoateliér</h2>
-            <p className="muted">Castingové přefocení v Českých Budějovicích. Pět upravených fotografií za 600 Kč.</p>
+            <p className="muted">Castingové přefocení v Českých Budějovicích. 10 upravených fotografií za 600 Kč.</p>
             <Link className="btn primary" href="/fotoatelier#rezervace">
               Rezervovat přefocení
             </Link>
