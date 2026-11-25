@@ -743,6 +743,7 @@ function downloadBackup() {
 >
   🎬 Projekty
 </button>
+<a className="btn" href="/admin/fotoatelier">Rezervace fotoateliéru</a>
 <button
   onClick={downloadBackup}
   style={{

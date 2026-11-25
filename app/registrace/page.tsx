@@ -531,6 +531,9 @@ export default function Registration() {
                   <option value="yes">Ano</option>
                   <option value="no">Ne</option>
                 </select>
+                <a href="/fotoatelier#rezervace" target="_blank" rel="noopener">
+                  Rezervovat přefocení ve fotoateliéru (otevře se v nové kartě)
+                </a>
               </div>
 
               <div className="field full">

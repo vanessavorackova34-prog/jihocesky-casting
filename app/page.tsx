@@ -12,6 +12,7 @@ export default function Home() {
           <Link href="/o-castingu">O castingu</Link>
           <Link href="/jak-to-funguje">Jak to funguje</Link>
           <Link href="/kontakt">Kontakt</Link>
+          <Link href="/fotoatelier">Fotoateliér</Link>
         </nav>
 
         <Link className="btn" href="/prihlaseni">
@@ -60,6 +61,16 @@ export default function Home() {
             </Link>
           </div>
          </div>
+        </section>
+
+        <section className="section">
+          <div className="card">
+            <h2>LEXAPA Fotoateliér</h2>
+            <p className="muted">Castingové přefocení v Českých Budějovicích. Pět upravených fotografií za 600 Kč.</p>
+            <Link className="btn primary" href="/fotoatelier#rezervace">
+              Rezervovat přefocení
+            </Link>
+          </div>
         </section>
 
         <section className="stats">

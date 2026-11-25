@@ -50,7 +50,8 @@ export default function Prihlaseni() {
         return;
       }
 
-      router.push("/admin");
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.push(next === "fotoatelier" ? "/admin/fotoatelier" : "/admin");
       router.refresh();
     } catch (err) {
       console.error(err);
