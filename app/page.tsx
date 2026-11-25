@@ -60,17 +60,14 @@ export default function Home() {
               Registrovat profil
             </Link>
           </div>
-         </div>
-        </section>
-
-        <section className="section">
-          <div className="card">
+          <div className="card" style={{ marginTop: 8 }}>
             <h2>LEXAPA Fotoateliér</h2>
             <p className="muted">Castingové přefocení v Českých Budějovicích. Pět upravených fotografií za 600 Kč.</p>
             <Link className="btn primary" href="/fotoatelier#rezervace">
               Rezervovat přefocení
             </Link>
           </div>
+         </div>
         </section>
 
         <section className="stats">
