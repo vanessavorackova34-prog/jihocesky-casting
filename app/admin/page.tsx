@@ -310,21 +310,6 @@ export default function AdminPage() {
     }
   }
 
-  function openPhotoBulkSms() {
-    const phones = Array.from(new Set(candidates
-      .filter(candidate => selectedIds.includes(candidate.id) && candidate.phone?.trim())
-      .map(candidate => candidate.phone!.replace(/[^+\d]/g, ""))
-      .filter(Boolean)));
-    if (!phones.length) {
-      alert("Vyber alespoň jednoho člověka s telefonním číslem.");
-      return;
-    }
-    const message = "Dobrý den, právě jsme spustili rezervace termínů na profesionální studiové přefocení do castingové databáze v našem novém fotoateliéru LEXAPA v Českých Budějovicích. Cena přefocení je 600 Kč.\n\nSvůj termín si můžete rezervovat zde:\nhttps://databaze.lexapacasting.cz/fotoatelier#rezervace\n\nTěšíme se na vás!\nTým LEXAPA CASTING";
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const recipients = phones.map(phone => encodeURIComponent(phone)).join(isIOS ? ";" : ",");
-    window.location.href = `sms:${recipients}${isIOS ? "&" : "?"}body=${encodeURIComponent(message)}`;
-  }
-
   async function loadInternal(candidateId: string) {
     if (!supabase) return;
     const { data } = await supabase.from("candidate_internal").select("*").eq("candidate_id", candidateId).maybeSingle();
@@ -1095,9 +1080,6 @@ function downloadBackup() {
             </button>
             <button type="button" onClick={() => copyPhotoSms("message")} style={actionButton}>
               Kopírovat text SMS – Přefocení
-            </button>
-            <button type="button" onClick={openPhotoBulkSms} style={actionButton}>
-              📸 SMS – Přefocení
             </button>
             <button type="button" onClick={createProjectFromSelection} style={actionButton}>
               🎬 Vytvořit projekt / shortlist
