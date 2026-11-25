@@ -50,6 +50,12 @@ export default function Prihlaseni() {
         return;
       }
 
+      const access = await supabase.rpc("photoatelier_is_organizer");
+      if (access.error || access.data !== true) {
+        await supabase.auth.signOut({ scope: "local" });
+        setError("Tento účet nemá přístup fotografa.");
+        return;
+      }
       router.replace("/fotoatelier/rezervace");
       router.refresh();
     } catch (err) {
@@ -79,7 +85,7 @@ export default function Prihlaseni() {
         >
           <div className="eyebrow">FOTOATELIÉR</div>
 
-          <h1>Přihlášení fotografa</h1>
+          <h1 style={{color:"#e5b94e"}}>Přihlášení fotografa</h1>
 
           {error && <div className="error">{error}</div>}
 
@@ -114,7 +120,7 @@ export default function Prihlaseni() {
               {loading ? "Přihlašuji…" : "Přihlásit se"}
             </button>
           </form>
-          <p><Link href="/fotoatelier/nastavit-heslo">Nastavit nebo obnovit heslo</Link></p>
+
         </div>
       </main>
     </>
