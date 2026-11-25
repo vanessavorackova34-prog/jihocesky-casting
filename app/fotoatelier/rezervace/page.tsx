@@ -55,6 +55,26 @@ export default function PhotoatelierAdmin() {
     void load();
   }, []);
 
+  async function removeReservation(row: Reservation) {
+    if (!url || !key || saving) return;
+    const date = new Date(row.booking_date + "T12:00:00").toLocaleDateString("cs-CZ");
+    if (!window.confirm(`Trvale smazat rezervaci pro ${row.client_name} na ${date} v ${row.booking_time.slice(0, 5)}?`)) return;
+    setSaving(row.id);
+    setNotice("");
+    try {
+      const db = createBrowserClient(url, key);
+      const result = await db.from(table).delete().eq("id", row.id)
+        .eq("booking_time", row.booking_time).eq("status", row.status).select("id").single();
+      if (result.error) throw result.error;
+      setRows((current) => current.filter((item) => item.id !== row.id));
+      setNotice("Rezervace byla smazána.");
+    } catch {
+      setNotice("Smazání se nepodařilo ověřit. Obnovte stránku.");
+    } finally {
+      setSaving("");
+    }
+  }
+
   async function save(event: FormEvent<HTMLFormElement>, row: Reservation) {
     event.preventDefault();
     if (!url || !key || saving) return;
@@ -126,6 +146,7 @@ export default function PhotoatelierAdmin() {
               {saving === row.id ? "Ukládám…" : "Uložit změny"}
             </button>
           </form>
+          <button className="btn" type="button" disabled={!!saving} onClick={() => removeReservation(row)}>Smazat rezervaci</button>
         </article>
       ))}
     </main>

@@ -121,6 +121,8 @@ form.onsubmit = async (event) => {
     }
     form.reset();
     status.textContent = 'Žádost je přijatá. Fotograf vás kontaktuje s potvrzením termínu.';
+    const date = new Date(selected + 'T12:00:00').toLocaleDateString('cs-CZ');
+    window.alert('Žádost o rezervaci byla odeslána.\n\nVybraný termín: ' + date + ' v ' + data.cas + '.\nFotograf vás kontaktuje s potvrzením.');
     await loadSlots();
   } catch {
     status.textContent = 'Odeslání se nepodařilo ověřit. Zkontrolujte dostupnost termínu.';
