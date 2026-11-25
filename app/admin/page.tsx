@@ -291,6 +291,25 @@ export default function AdminPage() {
       `sms:${phones.join(",")}?&body=${encodeURIComponent(message.trim())}`;
   }
 
+  async function copyPhotoSms(kind: "phones" | "message") {
+    const phones = Array.from(new Set(candidates
+      .filter(candidate => selectedIds.includes(candidate.id) && candidate.phone?.trim())
+      .map(candidate => candidate.phone!.replace(/[^+\d]/g, ""))
+      .filter(Boolean)));
+    const message = "Dobrý den, právě jsme spustili rezervace termínů na profesionální studiové přefocení do castingové databáze v našem novém fotoateliéru LEXAPA v Českých Budějovicích. Cena přefocení je 600 Kč.\n\nSvůj termín si můžete rezervovat zde:\nhttps://databaze.lexapacasting.cz/fotoatelier#rezervace\n\nTěšíme se na vás!\nTým LEXAPA CASTING";
+    if (kind === "phones" && !phones.length) {
+      alert("Vyber alespoň jednoho člověka s telefonním číslem.");
+      return;
+    }
+    const value = kind === "phones" ? phones.join(", ") : message;
+    try {
+      await navigator.clipboard.writeText(value);
+      alert(kind === "phones" ? `Zkopírováno ${phones.length} telefonních čísel.` : "Text SMS zkopírován.");
+    } catch {
+      window.prompt("Zkopírujte obsah ručně:", value);
+    }
+  }
+
   function openPhotoBulkSms() {
     const phones = Array.from(new Set(candidates
       .filter(candidate => selectedIds.includes(candidate.id) && candidate.phone?.trim())
@@ -1070,6 +1089,12 @@ function downloadBackup() {
             <strong>Vybráno: {selectedIds.length}</strong>
             <button type="button" onClick={openBulkSms} style={actionButton}>
               📱 Hromadná SMS
+            </button>
+            <button type="button" onClick={() => copyPhotoSms("phones")} style={actionButton}>
+              Kopírovat vybraná čísla
+            </button>
+            <button type="button" onClick={() => copyPhotoSms("message")} style={actionButton}>
+              Kopírovat text SMS – Přefocení
             </button>
             <button type="button" onClick={openPhotoBulkSms} style={actionButton}>
               📸 SMS – Přefocení
