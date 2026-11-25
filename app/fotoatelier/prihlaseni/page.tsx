@@ -114,6 +114,7 @@ export default function Prihlaseni() {
               {loading ? "Přihlašuji…" : "Přihlásit se"}
             </button>
           </form>
+          <p><Link href="/fotoatelier/nastavit-heslo">Nastavit nebo obnovit heslo</Link></p>
         </div>
       </main>
     </>
