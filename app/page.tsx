@@ -88,7 +88,7 @@ export default function Home() {
 
           <div className="stat">
             <b>📍</b>
-            <small>Celá Česká republika</small>
+            <small>Sídlo: České Budějovice</small>
           </div>
         </section>
 
