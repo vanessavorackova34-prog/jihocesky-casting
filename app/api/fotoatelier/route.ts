@@ -52,6 +52,9 @@ export async function POST(request: Request) {
   const { error } = await db.rpc("photoatelier_book", {
     p_date: datum, p_time: cas, p_name: jmeno, p_email: email, p_phone: telefon, p_note: poznamka,
   });
+  if (error?.code === "P0001" && error.message === "Photoatelier booking weekend unavailable") {
+    return response({ error: "Tento den už není otevřený pro nové rezervace. Vyberte prosím jiný termín." }, 400);
+  }
   if (error?.code === "23505") {
     return response({ error: "Tento čas je už obsazený. Vyberte prosím jiný." }, 409);
   }

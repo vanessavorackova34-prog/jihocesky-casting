@@ -20,6 +20,12 @@ function iso(date) {
     String(date.getDate()).padStart(2, '0')].join('-');
 }
 
+function isBookingWeekend(date) {
+  const daysFromFriday = (date.getDay() + 2) % 7;
+  const friday = date.getDate() - daysFromFriday;
+  return daysFromFriday <= 2 && (friday >= 1 && friday <= 7 || friday >= 15 && friday <= 21);
+}
+
 function calendar() {
   find('month').textContent = month.toLocaleDateString('cs-CZ', { month: 'long', year: 'numeric' });
   find('prev').disabled = month <= firstMonth;
@@ -40,7 +46,7 @@ function calendar() {
     const active = dateKey === selected;
     button.type = 'button';
     button.textContent = day;
-    button.disabled = date < earliest || ![0, 5, 6].includes(date.getDay());
+    button.disabled = date < earliest || !isBookingWeekend(date);
     button.classList.toggle('active', active);
     button.setAttribute('aria-pressed', String(active));
     button.dataset.date = dateKey;
