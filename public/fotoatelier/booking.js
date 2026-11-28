@@ -1,139 +1,145 @@
-const find = (id) => document.getElementById(id);
-const form = find('inquiryForm');
-const slot = find('slot');
-const submit = form.querySelector('[type="submit"]');
-const status = find('bookingStatus');
-const pragueDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Prague' }).format(new Date());
-const earliest = new Date(pragueDate + 'T12:00:00');
-earliest.setDate(earliest.getDate() + 7);
-const firstMonth = new Date(earliest.getFullYear(), earliest.getMonth(), 1);
-const month = new Date(firstMonth);
-const times = Array.from({ length: 21 }, (_, i) =>
-  String(10 + Math.floor(i / 3)) + ':' + String((i % 3) * 20).padStart(2, '0')
-).filter((time) => !time.startsWith("12:"));
-let selected = '';
-let loadingSlots;
-let sending = false;
+(() => {
+  const find = (id) => document.getElementById(id);
+  const form = find('inquiryForm');
+  const slot = find('slot');
+  const submit = form.querySelector('[type="submit"]');
+  const status = find('bookingStatus');
+  const pragueDateParts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Prague', year: 'numeric', month: 'numeric', day: 'numeric',
+  }).formatToParts(new Date());
+  const pragueDate = Object.fromEntries(pragueDateParts.map(({ type, value }) => [type, Number(value)]));
+  const earliest = new Date(pragueDate.year, pragueDate.month - 1, pragueDate.day, 12);
+  earliest.setDate(earliest.getDate() + 7);
+  const firstMonth = new Date(earliest.getFullYear(), earliest.getMonth(), 1);
+  const month = new Date(firstMonth);
+  const times = Array.from({ length: 21 }, (_, i) =>
+    String(10 + Math.floor(i / 3)) + ':' + String((i % 3) * 20).padStart(2, '0')
+  ).filter((time) => !time.startsWith("12:"));
+  let selected = '';
+  let loadingSlots;
+  let sending = false;
 
-function iso(date) {
-  return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'),
-    String(date.getDate()).padStart(2, '0')].join('-');
-}
-
-function isBookingWeekend(date) {
-  const daysFromFriday = (date.getDay() + 2) % 7;
-  const friday = date.getDate() - daysFromFriday;
-  return daysFromFriday <= 2 && (friday >= 1 && friday <= 7 || friday >= 15 && friday <= 21);
-}
-
-function calendar() {
-  find('month').textContent = month.toLocaleDateString('cs-CZ', { month: 'long', year: 'numeric' });
-  find('prev').disabled = month <= firstMonth;
-  const root = find('calendar');
-  root.replaceChildren();
-  for (const label of ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne']) {
-    const heading = document.createElement('span');
-    heading.textContent = label;
-    root.append(heading);
+  function iso(date) {
+    return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'),
+      String(date.getDate()).padStart(2, '0')].join('-');
   }
-  for (let i = 0; i < (month.getDay() + 6) % 7; i++) root.append(document.createElement('span'));
 
-  const days = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
-  for (let day = 1; day <= days; day++) {
-    const date = new Date(month.getFullYear(), month.getMonth(), day, 12);
-    const button = document.createElement('button');
-    const dateKey = iso(date);
-    const active = dateKey === selected;
-    button.type = 'button';
-    button.textContent = day;
-    button.disabled = date < earliest || !isBookingWeekend(date);
-    button.classList.toggle('active', active);
-    button.setAttribute('aria-pressed', String(active));
-    button.dataset.date = dateKey;
-    button.onclick = () => {
-      if (sending) return;
-      selected = dateKey;
-      find('picked').textContent = 'Vybraný den: ' + date.toLocaleDateString('cs-CZ');
-      status.textContent = '';
-      calendar();
-      root.querySelector('[aria-pressed="true"]').focus();
-      loadSlots();
-    };
-    root.append(button);
+  function isBookingWeekend(date) {
+    const daysFromFriday = (date.getDay() + 2) % 7;
+    const friday = date.getDate() - daysFromFriday;
+    return daysFromFriday <= 2 && (friday >= 1 && friday <= 7 || friday >= 15 && friday <= 21);
   }
-}
 
-async function loadSlots() {
-  loadingSlots?.abort();
-  const controller = new AbortController();
-  loadingSlots = controller;
-  slot.replaceChildren(new Option('Načítám časy…', ''));
-  slot.disabled = true;
-  submit.disabled = true;
-  try {
-    const response = await fetch('/api/fotoatelier?date=' + encodeURIComponent(selected), {
-      signal: controller.signal, cache: 'no-store',
-    });
-    if (!response.ok) throw new Error();
-    const { booked } = await response.json();
-    if (controller.signal.aborted) return;
-    const occupied = new Set(booked);
-    const available = times.some((time) => !occupied.has(time));
-    slot.replaceChildren(new Option(available ? 'Vyberte čas' : 'Všechny časy jsou obsazené', ''));
-    for (const time of times) {
-      const taken = occupied.has(time);
-      const option = new Option(time + (taken ? ' – obsazeno' : ''), time);
-      option.disabled = taken;
-      slot.add(option);
+  function calendar() {
+    find('month').textContent = month.toLocaleDateString('cs-CZ', { month: 'long', year: 'numeric' });
+    find('prev').disabled = month <= firstMonth;
+    const root = find('calendar');
+    root.replaceChildren();
+    for (const label of ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne']) {
+      const heading = document.createElement('span');
+      heading.textContent = label;
+      root.append(heading);
     }
-    slot.disabled = !available;
-  } catch {
-    if (controller.signal.aborted) return;
-    slot.replaceChildren(new Option('Časy se nepodařilo načíst', ''));
-    status.textContent = 'Klikněte znovu na vybraný den a zkuste načíst časy.';
+    for (let i = 0; i < (month.getDay() + 6) % 7; i++) root.append(document.createElement('span'));
+
+    const days = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+    for (let day = 1; day <= days; day++) {
+      const date = new Date(month.getFullYear(), month.getMonth(), day, 12);
+      const button = document.createElement('button');
+      const dateKey = iso(date);
+      const active = dateKey === selected;
+      button.type = 'button';
+      button.textContent = day;
+      button.disabled = date < earliest || !isBookingWeekend(date);
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+      button.dataset.date = dateKey;
+      button.onclick = () => {
+        if (sending) return;
+        selected = dateKey;
+        find('picked').textContent = 'Vybraný den: ' + date.toLocaleDateString('cs-CZ');
+        status.textContent = '';
+        calendar();
+        root.querySelector('[aria-pressed="true"]').focus();
+        loadSlots();
+      };
+      root.append(button);
+    }
   }
-}
 
-find('prev').onclick = () => { month.setMonth(month.getMonth() - 1); calendar(); };
-find('next').onclick = () => { month.setMonth(month.getMonth() + 1); calendar(); };
-slot.onchange = () => { submit.disabled = !slot.value; };
-submit.disabled = true;
-calendar();
-
-form.onsubmit = async (event) => {
-  event.preventDefault();
-  if (sending || !selected || !times.includes(slot.value)) return;
-  sending = true;
-  submit.disabled = true;
-  const data = Object.fromEntries(new FormData(form));
-  slot.disabled = true;
-  status.textContent = 'Odesílám rezervaci…';
-  try {
-    const response = await fetch('/api/fotoatelier', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, datum: selected }),
-    });
-    const result = await response.json();
-    if (!response.ok) {
-      status.textContent = result.error;
-      if (response.status === 409) {
-        await loadSlots();
-      } else {
-        slot.disabled = false;
-        submit.disabled = false;
+  async function loadSlots() {
+    loadingSlots?.abort();
+    const controller = new AbortController();
+    loadingSlots = controller;
+    slot.replaceChildren(new Option('Načítám časy…', ''));
+    slot.disabled = true;
+    submit.disabled = true;
+    try {
+      const response = await fetch('/api/fotoatelier?date=' + encodeURIComponent(selected), {
+        signal: controller.signal, cache: 'no-store',
+      });
+      if (!response.ok) throw new Error();
+      const { booked } = await response.json();
+      if (controller.signal.aborted) return;
+      const occupied = new Set(booked);
+      const available = times.some((time) => !occupied.has(time));
+      slot.replaceChildren(new Option(available ? 'Vyberte čas' : 'Všechny časy jsou obsazené', ''));
+      for (const time of times) {
+        const taken = occupied.has(time);
+        const option = new Option(time + (taken ? ' – obsazeno' : ''), time);
+        option.disabled = taken;
+        slot.add(option);
       }
-      return;
+      slot.disabled = !available;
+    } catch {
+      if (controller.signal.aborted) return;
+      slot.replaceChildren(new Option('Časy se nepodařilo načíst', ''));
+      status.textContent = 'Klikněte znovu na vybraný den a zkuste načíst časy.';
     }
-    form.reset();
-    status.textContent = 'Žádost je přijatá. Fotograf vás kontaktuje s potvrzením termínu.';
-    const date = new Date(selected + 'T12:00:00').toLocaleDateString('cs-CZ');
-    window.alert('Žádost o rezervaci byla odeslána.\n\nVybraný termín: ' + date + ' v ' + data.cas + '.\nFotograf vás kontaktuje s potvrzením.');
-    await loadSlots();
-  } catch {
-    status.textContent = 'Odeslání se nepodařilo ověřit. Zkontrolujte dostupnost termínu.';
-    await loadSlots();
-  } finally {
-    sending = false;
   }
-};
+
+  find('prev').onclick = () => { month.setMonth(month.getMonth() - 1); calendar(); };
+  find('next').onclick = () => { month.setMonth(month.getMonth() + 1); calendar(); };
+  slot.onchange = () => { submit.disabled = !slot.value; };
+  submit.disabled = true;
+  calendar();
+  find('picked').textContent = 'Vyberte den v kalendáři.';
+
+  form.onsubmit = async (event) => {
+    event.preventDefault();
+    if (sending || !selected || !times.includes(slot.value)) return;
+    sending = true;
+    submit.disabled = true;
+    const data = Object.fromEntries(new FormData(form));
+    slot.disabled = true;
+    status.textContent = 'Odesílám rezervaci…';
+    try {
+      const response = await fetch('/api/fotoatelier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, datum: selected }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        status.textContent = result.error;
+        if (response.status === 409) {
+          await loadSlots();
+        } else {
+          slot.disabled = false;
+          submit.disabled = false;
+        }
+        return;
+      }
+      form.reset();
+      status.textContent = 'Žádost je přijatá. Fotograf vás kontaktuje s potvrzením termínu.';
+      const date = new Date(selected + 'T12:00:00').toLocaleDateString('cs-CZ');
+      window.alert('Žádost o rezervaci byla odeslána.\n\nVybraný termín: ' + date + ' v ' + data.cas + '.\nFotograf vás kontaktuje s potvrzením.');
+      await loadSlots();
+    } catch {
+      status.textContent = 'Odeslání se nepodařilo ověřit. Zkontrolujte dostupnost termínu.';
+      await loadSlots();
+    } finally {
+      sending = false;
+    }
+  };
+})();
