@@ -65,7 +65,7 @@ export default function PhotoatelierAdmin() {
     try {
       const db = createBrowserClient(url, key);
       const result = await db.from(table).delete().eq("id", row.id)
-        .eq("booking_time", row.booking_time).eq("status", row.status).select("id").single();
+        .eq("booking_date", row.booking_date).eq("booking_time", row.booking_time).eq("status", row.status).select("id").single();
       if (result.error) throw result.error;
       setRows((current) => current.filter((item) => item.id !== row.id));
       setNotice("Rezervace byla smazána.");
@@ -85,12 +85,13 @@ export default function PhotoatelierAdmin() {
     try {
       const db = createBrowserClient(url, key);
       const { data, error: failure } = await db.from(table).update({
+        booking_date: form.get("date"),
         booking_time: form.get("time"),
         status: form.get("status"),
-      }).eq("id", row.id).eq("booking_time", row.booking_time).eq("status", row.status)
+      }).eq("id", row.id).eq("booking_date", row.booking_date).eq("booking_time", row.booking_time).eq("status", row.status)
         .select("*").single();
       if (failure?.code === "23505") {
-        setNotice("Čas je obsazený. Vyberte prosím jiný.");
+        setNotice("Vybraný čas je v tento den obsazený. Vyberte prosím jiný.");
       } else if (failure?.code === "PGRST116") {
         setNotice("Rezervace se mezitím změnila. Obnovte stránku.");
       } else if (failure) {
@@ -144,7 +145,10 @@ export default function PhotoatelierAdmin() {
             <a href={`tel:${row.phone.replace(/[^+\d]/g, "")}`}>{row.phone}</a></p>
           {row.note && <p className={styles.note}>{row.note}</p>}
           <details><summary>Upravit rezervaci</summary>
-          <form key={row.booking_time + row.status} onSubmit={(event) => save(event, row)}>
+          <form key={row.booking_date + row.booking_time + row.status} onSubmit={(event) => save(event, row)}>
+            <label className="field">Datum focení
+              <input type="date" name="date" defaultValue={row.booking_date} required />
+            </label>
             <label className="field">Čas focení
               <select name="time" defaultValue={row.booking_time.slice(0, 5)}>
                 {times.map((time) => <option key={time}>{time}</option>)}
